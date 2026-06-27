@@ -1,17 +1,9 @@
-/**
- * Read every registered pair, fully hydrated. Prefers the deployed
- * `WrapperRegistryLens` (one `eth_call`); falls back to a direct registry slice
- * + a single multicall when no Lens is configured for the chain. Both paths
- * return the identical `PairView[]`, and both keep revoked pairs (the registry
- * slice includes them) so the UI can show-as-revoked rather than silently drop.
- */
 import type { PublicClient } from "viem";
 
 import { erc20Abi, lensAbi, registryAbi, wrapperAbi } from "./abi";
 import { CHAINS, type SupportedChainId } from "./chains";
 import type { FetchPairsOptions, PairView } from "./types";
 
-/** IERC7984 interface id. */
 const IERC7984_ID = "0x4958f2a4";
 
 function applyOptions(pairs: PairView[], options?: FetchPairsOptions): PairView[] {
@@ -19,7 +11,7 @@ function applyOptions(pairs: PairView[], options?: FetchPairsOptions): PairView[
   return pairs;
 }
 
-/** Lens-first entry point. */
+// Lens-first; falls back to direct reads
 export async function fetchPairs(
   publicClient: PublicClient,
   chainId: SupportedChainId,
@@ -52,7 +44,6 @@ export async function fetchPairs(
   return applyOptions(await fetchPairsDirect(publicClient, chainId), options);
 }
 
-/** Direct registry read + multicall hydration (no Lens required). */
 export async function fetchPairsDirect(
   publicClient: PublicClient,
   chainId: SupportedChainId,
@@ -73,8 +64,6 @@ export async function fetchPairsDirect(
     args: [0n, length],
   });
 
-  // One multicall hydrates every pair. allowFailure mirrors the Lens try/catch:
-  // a broken token degrades to defaults instead of failing the whole batch.
   const calls = slice.flatMap((p) => [
     { address: p.tokenAddress, abi: erc20Abi, functionName: "symbol" } as const,
     { address: p.tokenAddress, abi: erc20Abi, functionName: "name" } as const,
@@ -90,6 +79,7 @@ export async function fetchPairsDirect(
     } as const,
   ]);
 
+  // allowFailure: broken token -> defaults
   const results = await publicClient.multicall({ contracts: calls, allowFailure: true });
 
   const ok = <T>(i: number, fallback: T): T => {

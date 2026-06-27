@@ -1,6 +1,6 @@
 import { SEPOLIA_ID, type SupportedChainId } from "./chains";
 
-/** Faucet cap on the underlying ERC20Mock: 1,000,000 whole tokens per call. */
+// faucet cap: 1,000,000 whole tokens
 export const FAUCET_MAX_WHOLE_TOKENS = 1_000_000n;
 
 export interface KnownToken {
@@ -9,11 +9,9 @@ export interface KnownToken {
   underlying: `0x${string}`;
   wrapper: `0x${string}`;
   decimals: number;
-  /** Underlying has a permissionless capped `mint` faucet. */
   faucet: boolean;
 }
 
-/** Sepolia pairs as read live on-chain 2026-06-27 (8 pairs, all isValid). */
 export const SEPOLIA_TOKENS: KnownToken[] = [
   { chainId: SEPOLIA_ID, symbol: "cUSDCMock", underlying: "0x9b5Cd13b8eFbB58Dc25A05CF411D8056058aDFfF", wrapper: "0x7c5BF43B851c1dff1a4feE8dB225b87f2C223639", decimals: 6, faucet: true },
   { chainId: SEPOLIA_ID, symbol: "cUSDTMock", underlying: "0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0", wrapper: "0x4E7B06D78965594eB5EF5414c357ca21E1554491", decimals: 6, faucet: true },
@@ -27,7 +25,6 @@ export const SEPOLIA_TOKENS: KnownToken[] = [
 
 export const KNOWN_TOKENS: KnownToken[] = [...SEPOLIA_TOKENS];
 
-/** Look up known metadata for a wrapper address (case-insensitive). */
 export function knownTokenByWrapper(wrapper: string): KnownToken | undefined {
   const w = wrapper.toLowerCase();
   return KNOWN_TOKENS.find((t) => t.wrapper.toLowerCase() === w);

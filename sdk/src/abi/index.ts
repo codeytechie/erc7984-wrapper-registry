@@ -71,7 +71,7 @@ export const registryAbi = [
   },
 ] as const;
 
-/** Output tuple shape shared by `getPairs` / `getAllPairs`. */
+// getPairs/getAllPairs output shape
 const lensPairViewComponents = [
   { name: "underlying", type: "address" },
   { name: "wrapper", type: "address" },
