@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+.env.local
+.DS_Store
+
+# hardhat
+artifacts
+cache
+coverage
+coverage.json
+contracts/types
+fhevmTemp
+
+# frontend (vite)
+frontend/dist
+.vercel

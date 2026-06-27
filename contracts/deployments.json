@@ -1,0 +1,12 @@
+{
+  "1": {
+    "registry": "0xeb5015fF021DB115aCe010f23F55C2591059bBA0",
+    "relayerUrl": "https://relayer.mainnet.zama.org/v2",
+    "lens": null
+  },
+  "11155111": {
+    "registry": "0x2f0750Bbb0A246059d80e94c454586a7F27a128e",
+    "relayerUrl": "https://relayer.testnet.zama.org/v2",
+    "lens": null
+  }
+}

@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
+
+/// @title IERC20Metadata — the optional metadata surface of an ERC-20.
+interface IERC20Metadata {
+    function name() external view returns (string memory);
+
+    function symbol() external view returns (string memory);
+
+    function decimals() external view returns (uint8);
+}
