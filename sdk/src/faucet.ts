@@ -22,7 +22,8 @@ export async function faucetMint(client: ZamaClient, params: FaucetParams): Prom
     abi: erc20MockAbi,
     functionName: "mint",
     args: [to, amount],
-    account: client.account,
+    // local account object signs locally (node); address string -> wallet (web)
+    account: client.walletClient.account ?? client.account,
     chain: null,
   });
   await client.publicClient.waitForTransactionReceipt({ hash });

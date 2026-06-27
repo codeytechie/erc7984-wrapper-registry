@@ -1,0 +1,22 @@
+{
+  "name": "@cwr/tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Live Sepolia end-to-end verification against the official Zama contracts.",
+  "license": "MIT",
+  "scripts": {
+    "e2e:sepolia": "tsx scripts/sepolia-e2e.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cwr/sdk": "file:../sdk",
+    "dotenv": "^16.4.5",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.30",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

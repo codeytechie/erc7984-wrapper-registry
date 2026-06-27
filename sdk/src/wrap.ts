@@ -44,7 +44,7 @@ export async function approveAndWrap(client: ZamaClient, params: WrapParams): Pr
       abi: erc20Abi,
       functionName: "approve",
       args: [params.wrapper, params.amount],
-      account: client.account,
+      account: client.walletClient.account ?? client.account,
       chain: null,
     });
     await client.publicClient.waitForTransactionReceipt({ hash: approveHash });
@@ -55,7 +55,7 @@ export async function approveAndWrap(client: ZamaClient, params: WrapParams): Pr
     abi: wrapperAbi,
     functionName: "wrap",
     args: [to, params.amount],
-    account: client.account,
+    account: client.walletClient.account ?? client.account,
     chain: null,
   });
   await client.publicClient.waitForTransactionReceipt({ hash: wrapHash });
