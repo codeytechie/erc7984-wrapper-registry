@@ -1,0 +1,28 @@
+{
+  "name": "@cwr/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless integration layer for the Confidential Wrapper Registry (viem + Zama SDK).",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@zama-fhe/sdk": "^3.0.1",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.3"
+  }
+}
