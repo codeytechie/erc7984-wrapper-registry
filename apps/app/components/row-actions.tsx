@@ -1,20 +1,22 @@
 "use client";
 import { useState } from "react";
-import type { PairView, ZamaClient } from "@cwr/sdk";
+import { Lock, Unlock, Send, Droplets } from "lucide-react";
+import { faucetMint, knownTokenByWrapper, type PairView, type ZamaClient } from "@cwr/sdk";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { FaucetAction } from "./faucet-action";
 import { WrapAction } from "./wrap-action";
 import { UnwrapAction } from "./unwrap-action";
 import { TransferAction } from "./transfer-action";
+import { useAsyncAction } from "@/hooks/use-async-action";
 
 type Dialog = null | "wrap" | "unwrap" | "transfer";
 
-function MenuItem({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function IconBtn({ label, onClick, disabled, children }: { label: string; onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted">
+    <Button variant="ghost" size="icon" className="h-8 w-8" title={label} aria-label={label} onClick={onClick} disabled={disabled}>
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -29,8 +31,11 @@ export function RowActions({
   showFaucet: boolean;
   onDone: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
+  const faucetable = (knownTokenByWrapper(pair.wrapper)?.faucet ?? false) && showFaucet;
+  const faucet = useAsyncAction(() =>
+    faucetMint(client!, { underlying: pair.underlying, underlyingDecimals: pair.underlyingDecimals, wholeTokens: 1000n }),
+  );
   const done = () => {
     onDone();
     setDialog(null);
@@ -39,32 +44,31 @@ export function RowActions({
   if (!client) return <span className="text-xs text-muted-foreground">—</span>;
 
   return (
-    <div className="relative inline-block text-left">
-      <Button size="sm" variant="outline" onClick={() => setOpen((o) => !o)}>
-        Actions ▾
-      </Button>
-      {open && (
-        <div
-          className="absolute right-0 z-20 mt-1 w-40 space-y-1 rounded-md border bg-card p-1 shadow-lg"
-          onMouseLeave={() => setOpen(false)}
+    <div className="flex items-center justify-end gap-1">
+      {faucetable && (
+        <IconBtn
+          label="Faucet 1000"
+          disabled={faucet.isPending}
+          onClick={async () => {
+            const ok = await faucet.run();
+            if (ok) {
+              toast.success("Minted 1000 tokens");
+              onDone();
+            }
+          }}
         >
-          {showFaucet && (
-            <div className="px-1 py-1">
-              <FaucetAction
-                client={client}
-                pair={pair}
-                onDone={() => {
-                  onDone();
-                  setOpen(false);
-                }}
-              />
-            </div>
-          )}
-          <MenuItem onClick={() => { setDialog("wrap"); setOpen(false); }}>Wrap</MenuItem>
-          <MenuItem onClick={() => { setDialog("unwrap"); setOpen(false); }}>Unwrap</MenuItem>
-          <MenuItem onClick={() => { setDialog("transfer"); setOpen(false); }}>Send</MenuItem>
-        </div>
+          <Droplets size={16} />
+        </IconBtn>
       )}
+      <IconBtn label="Wrap" onClick={() => setDialog("wrap")}>
+        <Lock size={16} />
+      </IconBtn>
+      <IconBtn label="Unwrap" onClick={() => setDialog("unwrap")}>
+        <Unlock size={16} />
+      </IconBtn>
+      <IconBtn label="Confidential send" onClick={() => setDialog("transfer")}>
+        <Send size={16} />
+      </IconBtn>
 
       <Modal open={dialog === "wrap"} onClose={() => setDialog(null)} title="Wrap to confidential">
         <WrapAction client={client} pair={pair} onDone={done} />
