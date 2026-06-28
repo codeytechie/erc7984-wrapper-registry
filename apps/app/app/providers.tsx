@@ -2,19 +2,19 @@
 import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultConfig, RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider, useAccount, usePublicClient, useWalletClient } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { mainnet, sepolia } from "wagmi/chains";
 import { http } from "viem";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useMemo } from "react";
-import { createZamaClient, type ZamaClient } from "@cwr/sdk";
-import { SEPOLIA_RPC, WC_PROJECT_ID } from "@/lib/env";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createZamaClient, type SupportedChainId, type ZamaClient } from "@cwr/sdk";
+import { MAINNET_RPC, SEPOLIA_RPC, WC_PROJECT_ID } from "@/lib/env";
 import { shouldRetry } from "@/lib/errors";
 
 const config = getDefaultConfig({
   appName: "Confidential Wrapper Registry",
   projectId: WC_PROJECT_ID || "PLACEHOLDER_WC_PROJECT_ID",
-  chains: [sepolia],
-  transports: { [sepolia.id]: http(SEPOLIA_RPC) },
+  chains: [sepolia, mainnet],
+  transports: { [sepolia.id]: http(SEPOLIA_RPC), [mainnet.id]: http(MAINNET_RPC) },
   ssr: true,
 });
 
@@ -24,29 +24,64 @@ const queryClient = new QueryClient({
 
 const zamaTheme = lightTheme({ accentColor: "#FFD208", accentColorForeground: "#000000", borderRadius: "medium" });
 
+export type Mode = "testnet" | "mainnet";
+
+interface ModeCtx {
+  mode: Mode;
+  chainId: SupportedChainId;
+  setMode: (m: Mode) => void;
+}
+
+const ModeContext = createContext<ModeCtx | null>(null);
+const MODE_KEY = "cwr:mode";
+
+function ModeProvider({ children }: { children: React.ReactNode }) {
+  const [mode, setModeState] = useState<Mode>("testnet");
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem(MODE_KEY) : null;
+    if (saved === "mainnet" || saved === "testnet") setModeState(saved);
+  }, []);
+
+  const setMode = (m: Mode) => {
+    setModeState(m);
+    if (typeof window !== "undefined") window.localStorage.setItem(MODE_KEY, m);
+  };
+
+  const value = useMemo<ModeCtx>(
+    () => ({ mode, chainId: mode === "mainnet" ? mainnet.id : sepolia.id, setMode }),
+    [mode],
+  );
+  return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>;
+}
+
+export function useMode(): ModeCtx {
+  const ctx = useContext(ModeContext);
+  if (!ctx) throw new Error("useMode must be used inside Providers");
+  return ctx;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={zamaTheme}>{children}</RainbowKitProvider>
+        <RainbowKitProvider theme={zamaTheme}>
+          <ModeProvider>{children}</ModeProvider>
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
 }
 
-// builds the SDK client from the connected wallet
+// builds the SDK client for the active (mode) chain
 export function useZamaClient(): ZamaClient | null {
+  const { chainId } = useMode();
   const { address } = useAccount();
-  const publicClient = usePublicClient({ chainId: sepolia.id });
+  const publicClient = usePublicClient({ chainId });
   const { data: walletClient } = useWalletClient();
+  const rpcUrl = chainId === mainnet.id ? MAINNET_RPC : SEPOLIA_RPC;
   return useMemo(() => {
     if (!address || !publicClient || !walletClient) return null;
-    return createZamaClient({
-      chainId: sepolia.id,
-      account: address,
-      publicClient,
-      walletClient,
-      rpcUrl: SEPOLIA_RPC,
-    });
-  }, [address, publicClient, walletClient]);
+    return createZamaClient({ chainId, account: address, publicClient, walletClient, rpcUrl });
+  }, [address, publicClient, walletClient, chainId, rpcUrl]);
 }

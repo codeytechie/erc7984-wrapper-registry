@@ -7,5 +7,7 @@ export * from "./faucet";
 export * from "./wrap";
 export * from "./balance";
 export * from "./unwrap";
+export * from "./transfer";
+export * from "./import";
 export * as abi from "./abi";
 export { ZamaError, ZamaErrorCode, matchZamaError } from "@zama-fhe/sdk";

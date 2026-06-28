@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ModeToggle } from "./mode-toggle";
 
 export function ConnectBar() {
   return (
@@ -9,7 +10,10 @@ export function ConnectBar() {
         <Image src="/brand/zama-z.svg" alt="Zama" width={28} height={28} priority />
         <span className="font-semibold">Confidential Wrapper Registry</span>
       </div>
-      <ConnectButton showBalance={false} />
+      <div className="flex items-center gap-3">
+        <ModeToggle />
+        <ConnectButton showBalance={false} />
+      </div>
     </header>
   );
 }

@@ -47,6 +47,7 @@ export async function fetchPairs(
 export async function fetchPairsDirect(
   publicClient: PublicClient,
   chainId: SupportedChainId,
+  options?: FetchPairsOptions,
 ): Promise<PairView[]> {
   const registry = CHAINS[chainId].registry;
 
@@ -87,7 +88,7 @@ export async function fetchPairsDirect(
     return r && r.status === "success" ? (r.result as T) : fallback;
   };
 
-  return slice.map((p, idx): PairView => {
+  const mapped = slice.map((p, idx): PairView => {
     const b = idx * 7;
     return {
       underlying: p.tokenAddress,
@@ -102,4 +103,5 @@ export async function fetchPairsDirect(
       supportsERC7984: ok<boolean>(b + 6, false),
     };
   });
+  return applyOptions(mapped, options);
 }
