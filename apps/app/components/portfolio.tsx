@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfidentialBalanceCell } from "./confidential-balance-cell";
 import { TokenInfo } from "./token-info";
+import { TokenIcon } from "./token-icon";
 import { RowActions } from "./row-actions";
 import { ImportDialog } from "./import-dialog";
 import { symbolOf } from "@/lib/token";
@@ -171,7 +172,8 @@ export function Portfolio() {
                   return (
                     <TR key={p.wrapper}>
                       <TD className="font-medium">
-                        <span className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center gap-2">
+                          <TokenIcon symbol={symbolOf(p)} address={p.underlying} />
                           {symbolOf(p)}
                           <TokenInfo pair={p} explorer={explorer} />
                           {importedSet.has(lc) && <Badge variant="muted">imported</Badge>}
