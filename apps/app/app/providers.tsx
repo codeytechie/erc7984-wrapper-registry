@@ -1,6 +1,6 @@
 "use client";
 import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultConfig, RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
+import { getDefaultConfig, RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider, useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
 import { http } from "viem";
@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: shouldRetry, staleTime: 30_000 } },
 });
 
-const zamaTheme = lightTheme({ accentColor: "#FFD208", accentColorForeground: "#000000", borderRadius: "medium" });
+const zamaTheme = darkTheme({ accentColor: "#FFD208", accentColorForeground: "#000000", borderRadius: "medium" });
 
 export type Mode = "testnet" | "mainnet";
 

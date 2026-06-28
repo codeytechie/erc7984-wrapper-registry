@@ -13,7 +13,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
         <Providers>{children}</Providers>
-        <Toaster richColors position="top-right" />
+        <Toaster richColors theme="dark" position="top-right" />
       </body>
     </html>
   );
