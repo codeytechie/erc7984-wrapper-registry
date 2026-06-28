@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount, usePublicClient } from "wagmi";
 import { abi, decryptBalancesBatch, fetchPairs, resolveImportedToken, type PairView } from "@cwr/sdk";
 import { useMode, useZamaClient } from "@/app/providers";
@@ -24,7 +25,8 @@ export function Portfolio() {
   const client = useZamaClient();
   const { chainId, mode } = useMode();
   const publicClient = usePublicClient({ chainId });
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const qc = useQueryClient();
 
   const [imported, setImported] = useState<PairView[]>([]);
@@ -44,7 +46,7 @@ export function Portfolio() {
   const { data: registryPairs, isLoading } = useQuery({
     queryKey: ["pairs", chainId],
     queryFn: () => fetchPairs(publicClient!, chainId),
-    enabled: !!publicClient,
+    enabled: !!publicClient && isConnected,
   });
 
   useEffect(() => {
@@ -111,6 +113,17 @@ export function Portfolio() {
     rows.forEach((p) => {
       overallByDecimals[p.underlyingDecimals] = (overallByDecimals[p.underlyingDecimals] ?? 0n) + totalBase(p);
     });
+  }
+
+  if (!isConnected) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center gap-4 p-12 text-center">
+          <p className="text-sm text-muted-foreground">Connect your wallet to view balances and manage tokens.</p>
+          <Button onClick={() => openConnectModal?.()}>Connect wallet</Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
