@@ -1,0 +1,12 @@
+{
+  "name": "erc7984-wrapper-registry",
+  "private": true,
+  "workspaces": ["sdk", "tools", "apps/*"],
+  "scripts": {
+    "build:sdk": "npm run build -w @cwr/sdk",
+    "dev:app": "npm run dev -w @cwr/app",
+    "dev:landing": "npm run dev -w @cwr/landing",
+    "build:app": "npm run build:sdk && npm run build -w @cwr/app",
+    "build:landing": "npm run build -w @cwr/landing"
+  }
+}

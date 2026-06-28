@@ -15,3 +15,6 @@ fhevmTemp
 # frontend (vite)
 frontend/dist
 .vercel
+
+apps/*/.next
+apps/*/node_modules

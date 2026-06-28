@@ -7,42 +7,40 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  contracts:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      # --- contracts: compile + full test suite (mock FHE runtime) ---
-      - name: Contracts install
+      - name: Install
         working-directory: contracts
         run: npm install
-      - name: Contracts compile
+      - name: Compile
         working-directory: contracts
         run: npm run compile
-      - name: Contracts test
+      - name: Test
         working-directory: contracts
         run: npm test
 
-      # --- sdk: typecheck + build (must build before tools) ---
-      - name: SDK install
-        working-directory: sdk
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # workspaces: sdk + tools + apps/*
+      - name: Install
         run: npm install
-      - name: SDK typecheck
-        working-directory: sdk
-        run: npm run typecheck
-      - name: SDK build
-        working-directory: sdk
-        run: npm run build
-
-      # --- tools: typecheck (needs built @cwr/sdk) ---
-      - name: Tools install
-        working-directory: tools
-        run: npm install
+      - name: Build SDK
+        run: npm run build:sdk
       - name: Tools typecheck
-        working-directory: tools
-        run: npm run typecheck
+        run: npm run typecheck -w @cwr/tools
+      - name: Build app
+        run: npm run build -w @cwr/app
+      - name: Build landing
+        run: npm run build -w @cwr/landing
