@@ -2,32 +2,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount, usePublicClient } from "wagmi";
-import {
-  decryptBalancesBatch,
-  fetchPairs,
-  resolveImportedToken,
-  type PairView,
-} from "@cwr/sdk";
+import { abi, decryptBalancesBatch, fetchPairs, resolveImportedToken, type PairView } from "@cwr/sdk";
 import { useMode, useZamaClient } from "@/app/providers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PublicBalanceCell } from "./public-balance-cell";
 import { ConfidentialBalanceCell } from "./confidential-balance-cell";
 import { TokenInfo } from "./token-info";
-import { ActionPanel } from "./action-panel";
+import { RowActions } from "./row-actions";
 import { ImportDialog } from "./import-dialog";
 import { symbolOf } from "@/lib/token";
 import { getImported, removeImported } from "@/lib/imported";
+import { fmt } from "@/lib/format";
 import { useAsyncAction } from "@/hooks/use-async-action";
+
+const mask = (revealed: boolean, formatted: string) => (revealed ? formatted : "****");
 
 export function Portfolio() {
   const client = useZamaClient();
   const { chainId, mode } = useMode();
   const publicClient = usePublicClient({ chainId });
-  const { isConnected } = useAccount();
+  const { address } = useAccount();
   const qc = useQueryClient();
 
   const [imported, setImported] = useState<PairView[]>([]);
@@ -35,10 +32,14 @@ export function Portfolio() {
     balances: {},
     failed: {},
   });
-  const [selected, setSelected] = useState<`0x${string}` | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const explorer = mode === "mainnet" ? "https://etherscan.io" : "https://sepolia.etherscan.io";
+
+  // reset revealed state when the account changes
+  useEffect(() => {
+    setConf({ balances: {}, failed: {} });
+  }, [address]);
 
   const { data: registryPairs, isLoading } = useQuery({
     queryKey: ["pairs", chainId],
@@ -46,7 +47,6 @@ export function Portfolio() {
     enabled: !!publicClient,
   });
 
-  // re-resolve imported tokens for this chain
   useEffect(() => {
     let active = true;
     const refs = getImported(chainId);
@@ -66,14 +66,33 @@ export function Portfolio() {
 
   const rows = useMemo(() => {
     const seen = new Set((registryPairs ?? []).map((p) => p.wrapper.toLowerCase()));
-    const extra = imported.filter((p) => !seen.has(p.wrapper.toLowerCase()));
-    return [...(registryPairs ?? []), ...extra];
+    return [...(registryPairs ?? []), ...imported.filter((p) => !seen.has(p.wrapper.toLowerCase()))];
   }, [registryPairs, imported]);
+
+  const wrappersKey = rows.map((r) => r.wrapper).join(",");
+
+  // public balances in one multicall, keyed by account
+  const { data: pub } = useQuery({
+    queryKey: ["pub", chainId, address, wrappersKey],
+    enabled: !!publicClient && !!address && rows.length > 0,
+    queryFn: async () => {
+      const calls = rows.map(
+        (r) => ({ address: r.underlying, abi: abi.erc20Abi, functionName: "balanceOf", args: [address!] }) as const,
+      );
+      const res = await publicClient!.multicall({ contracts: calls, allowFailure: true });
+      const out: Record<string, bigint> = {};
+      rows.forEach((r, i) => {
+        const x = res[i];
+        out[r.wrapper.toLowerCase()] = x && x.status === "success" ? x.result : 0n;
+      });
+      return out;
+    },
+  });
 
   const decryptAll = useAsyncAction(() => decryptBalancesBatch(client!, rows.map((r) => r.wrapper)));
 
   const refresh = (pair: PairView) => {
-    void qc.invalidateQueries({ queryKey: ["pub", chainId, pair.underlying] });
+    void qc.invalidateQueries({ queryKey: ["pub", chainId, address] });
     void qc.invalidateQueries({ queryKey: ["pairs", chainId] });
     setConf((prev) => {
       const balances = { ...prev.balances };
@@ -82,7 +101,17 @@ export function Portfolio() {
     });
   };
 
-  const selectedPair = rows.find((r) => r.wrapper === selected) ?? null;
+  const totalBase = (p: PairView): bigint => (pub?.[p.wrapper.toLowerCase()] ?? 0n) + (conf.balances[p.wrapper.toLowerCase()] ?? 0n) * p.rate;
+  const isRevealed = (p: PairView) => conf.balances[p.wrapper.toLowerCase()] != null;
+  const allRevealed = rows.length > 0 && rows.every(isRevealed) && !!pub;
+
+  // mixed decimals can't sum into one number; group by decimals
+  const overallByDecimals: Record<number, bigint> = {};
+  if (allRevealed) {
+    rows.forEach((p) => {
+      overallByDecimals[p.underlyingDecimals] = (overallByDecimals[p.underlyingDecimals] ?? 0n) + totalBase(p);
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -106,20 +135,20 @@ export function Portfolio() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading && (
+          {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-9 w-full" />
               ))}
             </div>
-          )}
-          {!isLoading && (
+          ) : (
             <Table>
               <THead>
                 <TR>
                   <TH>Token</TH>
-                  <TH>Public balance</TH>
-                  <TH>Confidential balance</TH>
+                  <TH>Public</TH>
+                  <TH>Confidential</TH>
+                  <TH>Total</TH>
                   <TH></TH>
                 </TR>
               </THead>
@@ -135,23 +164,21 @@ export function Portfolio() {
                           {importedSet.has(lc) && <Badge variant="muted">imported</Badge>}
                         </span>
                       </TD>
-                      <TD>
-                        <PublicBalanceCell client={client} underlying={p.underlying} decimals={p.underlyingDecimals} chainId={chainId} />
-                      </TD>
+                      <TD>{pub ? fmt(pub[lc] ?? 0n, p.underlyingDecimals) : <span className="text-muted-foreground">—</span>}</TD>
                       <TD>
                         <ConfidentialBalanceCell
                           client={client}
                           wrapper={p.wrapper}
                           decimals={p.wrapperDecimals}
-                          batchValue={conf.balances[lc]}
-                          failedCode={conf.failed[lc]}
+                          value={conf.balances[lc]}
+                          failed={conf.failed[lc]}
+                          onRevealed={(v) => setConf((prev) => ({ balances: { ...prev.balances, [lc]: v }, failed: prev.failed }))}
                         />
                       </TD>
+                      <TD className="font-mono">{mask(isRevealed(p), fmt(totalBase(p), p.underlyingDecimals))}</TD>
                       <TD className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="sm" variant={selected === p.wrapper ? "default" : "outline"} onClick={() => setSelected(p.wrapper)}>
-                            Manage
-                          </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <RowActions client={client} pair={p} showFaucet={mode === "testnet"} onDone={() => refresh(p)} />
                           {importedSet.has(lc) && (
                             <Button
                               size="sm"
@@ -159,7 +186,6 @@ export function Portfolio() {
                               onClick={() => {
                                 removeImported(chainId, p.wrapper);
                                 setImported((cur) => cur.filter((r) => r.wrapper.toLowerCase() !== lc));
-                                if (selected === p.wrapper) setSelected(null);
                               }}
                             >
                               Remove
@@ -176,27 +202,18 @@ export function Portfolio() {
         </CardContent>
       </Card>
 
-      {!isConnected || !client ? (
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Connect your wallet to view balances and manage tokens.</p>
-          </CardContent>
-        </Card>
-      ) : selectedPair ? (
-        <ActionPanel
-          client={client}
-          pair={selectedPair}
-          chainId={chainId}
-          showFaucet={mode === "testnet"}
-          onDone={() => refresh(selectedPair)}
-        />
-      ) : (
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Select a token (Manage) to faucet, wrap, decrypt, or transfer.</p>
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardContent className="flex items-center justify-between p-5">
+          <span className="text-sm text-muted-foreground">Σ holdings (token units, not fiat)</span>
+          <span className="font-mono">
+            {allRevealed
+              ? Object.entries(overallByDecimals)
+                  .map(([d, v]) => fmt(v, Number(d)))
+                  .join(" + ") || "0"
+              : "****"}
+          </span>
+        </CardContent>
+      </Card>
 
       <ImportDialog
         open={importOpen}
