@@ -25,7 +25,7 @@ export const CHAINS: Record<SupportedChainId, ChainConfig> = {
     name: "Sepolia",
     registry: "0x2f0750Bbb0A246059d80e94c454586a7F27a128e",
     relayerUrl: "https://relayer.testnet.zama.org/v2",
-    lens: undefined,
+    lens: "0x1B0Cd34931B6f600DeA694ffDb690f3b6d53e940",
   },
 };
 

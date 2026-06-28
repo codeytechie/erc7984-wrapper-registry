@@ -4,8 +4,6 @@ import type { Signer } from "ethers";
 
 import type { MockRegistry, WrapperRegistryLens } from "../types";
 
-// Exercises the registry read/revoke semantics the Lens and frontend rely on,
-// plus the Lens's empty-registry path. No FHE needed — pure view/state logic.
 describe("MockRegistry semantics + Lens edge cases", () => {
   let owner: Signer;
   let stranger: Signer;

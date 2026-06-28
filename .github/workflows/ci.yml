@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # --- contracts: compile + full test suite (mock FHE runtime) ---
+      - name: Contracts install
+        working-directory: contracts
+        run: npm install
+      - name: Contracts compile
+        working-directory: contracts
+        run: npm run compile
+      - name: Contracts test
+        working-directory: contracts
+        run: npm test
+
+      # --- sdk: typecheck + build (must build before tools) ---
+      - name: SDK install
+        working-directory: sdk
+        run: npm install
+      - name: SDK typecheck
+        working-directory: sdk
+        run: npm run typecheck
+      - name: SDK build
+        working-directory: sdk
+        run: npm run build
+
+      # --- tools: typecheck (needs built @cwr/sdk) ---
+      - name: Tools install
+        working-directory: tools
+        run: npm install
+      - name: Tools typecheck
+        working-directory: tools
+        run: npm run typecheck

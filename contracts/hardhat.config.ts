@@ -9,15 +9,16 @@ import "solidity-coverage";
 import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
 
-// `npx hardhat vars set MNEMONIC` etc. Falls back to the canonical Hardhat test
-// mnemonic so local mock tests run with zero setup.
 const MNEMONIC = vars.get("MNEMONIC", "test test test test test test test test test test test junk");
 
-// Public RPC defaults so read-only / mock work needs no API key. Override with
-// `npx hardhat vars set SEPOLIA_RPC_URL <url>` for deploys.
 const SEPOLIA_RPC_URL = vars.get("SEPOLIA_RPC_URL", "https://ethereum-sepolia-rpc.publicnode.com");
 const MAINNET_RPC_URL = vars.get("MAINNET_RPC_URL", "https://ethereum-rpc.publicnode.com");
-const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY", "");
+const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY", process.env.ETHERSCAN_API_KEY ?? "");
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY ?? "";
+const liveAccounts = PRIVATE_KEY
+  ? [PRIVATE_KEY.startsWith("0x") ? PRIVATE_KEY : `0x${PRIVATE_KEY}`]
+  : { mnemonic: MNEMONIC, path: "m/44'/60'/0'/0/", count: 10 };
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -39,12 +40,12 @@ const config: HardhatUserConfig = {
       chainId: 31337,
     },
     sepolia: {
-      accounts: { mnemonic: MNEMONIC, path: "m/44'/60'/0'/0/", count: 10 },
+      accounts: liveAccounts,
       chainId: 11155111,
       url: SEPOLIA_RPC_URL,
     },
     mainnet: {
-      accounts: { mnemonic: MNEMONIC, path: "m/44'/60'/0'/0/", count: 10 },
+      accounts: liveAccounts,
       chainId: 1,
       url: MAINNET_RPC_URL,
     },
