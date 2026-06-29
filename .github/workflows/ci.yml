@@ -40,6 +40,8 @@ jobs:
         run: npm run build:sdk
       - name: Tools typecheck
         run: npm run typecheck -w @cwr/tools
+      - name: Price oracle typecheck
+        run: npm run typecheck -w @cwr/price-oracle
       - name: Build app
         run: npm run build -w @cwr/app
       - name: Build landing

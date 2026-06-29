@@ -1,11 +1,13 @@
 {
   "name": "erc7984-wrapper-registry",
   "private": true,
-  "workspaces": ["sdk", "tools", "apps/*"],
+  "workspaces": ["sdk", "tools", "apps/*", "services/*"],
   "scripts": {
     "build:sdk": "npm run build -w @cwr/sdk",
     "dev:app": "npm run dev -w @cwr/app",
     "dev:landing": "npm run dev -w @cwr/landing",
+    "dev:prices": "npm run dev -w @cwr/price-oracle",
+    "start:prices": "npm run start -w @cwr/price-oracle",
     "build:app": "npm run build:sdk && npm run build -w @cwr/app",
     "build:landing": "npm run build -w @cwr/landing"
   }

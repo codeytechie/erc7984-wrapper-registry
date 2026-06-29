@@ -12,6 +12,7 @@ wrap, decrypt your balance via EIP-712, and unwrap, against live Sepolia.
 | `contracts/` | `WrapperRegistryLens` (deployed) + FHEVM mock harness. Standalone Hardhat project. |
 | `sdk/` (`@cwr/sdk`) | Headless integration layer: viem reads + Zama SDK for the FHE touchpoints. |
 | `tools/` (`@cwr/tools`) | Live Sepolia end-to-end verification against the official contracts. |
+| `services/price-oracle/` (`@cwr/price-oracle`) | Standalone cached USD price service for known tokens. |
 | `apps/landing/` (`@cwr/landing`) | Branded landing page. |
 | `apps/app/` (`@cwr/app`) | Main app: RainbowKit wallet, registry table, faucet, wrap, decrypt, unwrap. |
 
@@ -30,6 +31,7 @@ npm install            # installs all workspaces
 npm run build:sdk      # build @cwr/sdk first (apps import it)
 npm run dev:app        # main app on :3001
 npm run dev:landing    # landing on :3000
+npm run dev:prices     # price oracle on :8787
 ```
 
 App env (`apps/app/.env.local`): `NEXT_PUBLIC_WC_PROJECT_ID` (WalletConnect, from

@@ -23,7 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${telegraf.variable} h-full antialiased`}>
       <body className="min-h-full">
         <Providers>{children}</Providers>
-        <Toaster richColors theme="dark" position="top-right" />
+        <Toaster richColors theme="dark" />
       </body>
     </html>
   );

@@ -15,10 +15,12 @@ import { TokenInfo } from "./token-info";
 import { TokenIcon } from "./token-icon";
 import { RowActions } from "./row-actions";
 import { ImportDialog } from "./import-dialog";
-import { symbolOf } from "@/lib/token";
+import { normalizeSymbol, symbolOf } from "@/lib/token";
 import { getImported, removeImported } from "@/lib/imported";
 import { fmt } from "@/lib/format";
+import { fmtUsd, usdValue } from "@/lib/usd";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { usePrices } from "@/hooks/use-prices";
 
 const mask = (revealed: boolean, formatted: string) => (revealed ? formatted : "****");
 
@@ -29,6 +31,7 @@ export function Portfolio() {
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const qc = useQueryClient();
+  const { data: prices } = usePrices();
 
   const [imported, setImported] = useState<PairView[]>([]);
   const [conf, setConf] = useState<{ balances: Record<string, bigint>; failed: Record<string, string> }>({
@@ -104,17 +107,18 @@ export function Portfolio() {
     });
   };
 
+  const priceOf = (p: PairView) => prices?.[normalizeSymbol(symbolOf(p))];
   const totalBase = (p: PairView): bigint => (pub?.[p.wrapper.toLowerCase()] ?? 0n) + (conf.balances[p.wrapper.toLowerCase()] ?? 0n) * p.rate;
   const isRevealed = (p: PairView) => conf.balances[p.wrapper.toLowerCase()] != null;
   const allRevealed = rows.length > 0 && rows.every(isRevealed) && !!pub;
 
-  // mixed decimals can't sum into one number; group by decimals
-  const overallByDecimals: Record<number, bigint> = {};
-  if (allRevealed) {
-    rows.forEach((p) => {
-      overallByDecimals[p.underlyingDecimals] = (overallByDecimals[p.underlyingDecimals] ?? 0n) + totalBase(p);
-    });
-  }
+  // USD aggregate across priced assets
+  const overallUsd = allRevealed
+    ? rows.reduce((sum, p) => {
+        const u = usdValue(totalBase(p), p.underlyingDecimals, priceOf(p));
+        return u != null ? sum + u : sum;
+      }, 0)
+    : null;
 
   if (!isConnected) {
     return (
@@ -169,6 +173,12 @@ export function Portfolio() {
               <TBody>
                 {rows.map((p) => {
                   const lc = p.wrapper.toLowerCase();
+                  const price = priceOf(p);
+                  const pubBal = pub?.[lc] ?? 0n;
+                  const pubUsd = pub ? usdValue(pubBal, p.underlyingDecimals, price) : null;
+                  const tBase = totalBase(p);
+                  const totalUsd = usdValue(tBase, p.underlyingDecimals, price);
+                  const revealed = isRevealed(p);
                   return (
                     <TR key={p.wrapper}>
                       <TD className="font-medium">
@@ -179,18 +189,35 @@ export function Portfolio() {
                           {importedSet.has(lc) && <Badge variant="muted">imported</Badge>}
                         </span>
                       </TD>
-                      <TD>{pub ? fmt(pub[lc] ?? 0n, p.underlyingDecimals) : <span className="text-muted-foreground">—</span>}</TD>
+                      <TD>
+                        {pub ? (
+                          <span className="font-mono">
+                            {fmt(pubBal, p.underlyingDecimals)}
+                            {pubUsd != null && <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(pubUsd)}</span>}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TD>
                       <TD>
                         <ConfidentialBalanceCell
                           client={client}
                           wrapper={p.wrapper}
                           decimals={p.wrapperDecimals}
+                          rate={p.rate}
+                          underlyingDecimals={p.underlyingDecimals}
+                          price={price}
                           value={conf.balances[lc]}
                           failed={conf.failed[lc]}
                           onRevealed={(v) => setConf((prev) => ({ balances: { ...prev.balances, [lc]: v }, failed: prev.failed }))}
                         />
                       </TD>
-                      <TD className="font-mono">{mask(isRevealed(p), fmt(totalBase(p), p.underlyingDecimals))}</TD>
+                      <TD className="font-mono">
+                        {mask(revealed, fmt(tBase, p.underlyingDecimals))}
+                        {revealed && totalUsd != null && (
+                          <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(totalUsd)}</span>
+                        )}
+                      </TD>
                       <TD className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <RowActions client={client} pair={p} showFaucet={mode === "testnet"} onDone={() => refresh(p)} />
@@ -219,14 +246,8 @@ export function Portfolio() {
 
       <Card>
         <CardContent className="flex items-center justify-between p-5">
-          <span className="text-sm text-muted-foreground">Σ holdings (token units, not fiat)</span>
-          <span className="font-mono">
-            {allRevealed
-              ? Object.entries(overallByDecimals)
-                  .map(([d, v]) => fmt(v, Number(d)))
-                  .join(" + ") || "0"
-              : "****"}
-          </span>
+          <span className="text-sm text-muted-foreground">Σ holdings (USD estimate)</span>
+          <span className="font-mono">{overallUsd != null ? fmtUsd(overallUsd) : "****"}</span>
         </CardContent>
       </Card>
 
