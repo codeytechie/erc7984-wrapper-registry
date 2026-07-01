@@ -18,6 +18,14 @@ export async function unwrap(client: ZamaClient, params: UnwrapParams): Promise<
   return token.unshield(params.amount);
 }
 
+// pending unwrap tx hash from storage, or null
+export async function getPendingUnwrap(
+  client: ZamaClient,
+  wrapper: `0x${string}`,
+): Promise<`0x${string}` | null> {
+  return loadPendingUnshield(client.sdk.storage, wrapper);
+}
+
 // resume pending unwrap from storage
 export async function resumeUnwrap(
   client: ZamaClient,
