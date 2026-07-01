@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AmountField } from "./amount-field";
+import { Spinner } from "./spinner";
 import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { addressSchema, amountSchema, parseField } from "@/lib/schemas";
@@ -49,7 +50,14 @@ export function TransferAction({ client, pair, onDone }: { client: ZamaClient; p
           }
         }}
       >
-        {isPending ? "Sending…" : `Send ${sym}`}
+        {isPending ? (
+          <>
+            <Spinner />
+            Sending
+          </>
+        ) : (
+          `Send ${sym}`
+        )}
       </Button>
     </div>
   );

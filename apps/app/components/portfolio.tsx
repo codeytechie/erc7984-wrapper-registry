@@ -23,6 +23,7 @@ import { TokenInfo } from "./token-info";
 import { TokenIcon } from "./token-icon";
 import { RowActions } from "./row-actions";
 import { ImportDialog } from "./import-dialog";
+import { Spinner } from "./spinner";
 import { normalizeSymbol, symbolOf } from "@/lib/token";
 import { getImported, removeImported } from "@/lib/imported";
 import { fmt } from "@/lib/format";
@@ -200,7 +201,14 @@ export function Portfolio() {
                 setConf((p) => ({ balances: { ...p.balances, ...res.balances }, failed: { ...p.failed, ...res.failed } }));
             }}
           >
-            {decryptAll.isPending ? "Decrypting…" : "Decrypt all"}
+            {decryptAll.isPending ? (
+              <>
+                <Spinner />
+                Decrypting
+              </>
+            ) : (
+              "Decrypt all"
+            )}
           </Button>
         </div>
       </div>

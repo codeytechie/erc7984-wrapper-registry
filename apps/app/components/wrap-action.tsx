@@ -4,6 +4,7 @@ import { approveAndWrap, previewWrap, type PairView, type ZamaClient } from "@cw
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AmountField } from "./amount-field";
+import { Spinner } from "./spinner";
 import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { fmt } from "@/lib/format";
@@ -42,7 +43,14 @@ export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair:
           }
         }}
       >
-        {isPending ? "Wrapping…" : `Wrap ${sym}`}
+        {isPending ? (
+          <>
+            <Spinner />
+            Wrapping
+          </>
+        ) : (
+          `Wrap ${sym}`
+        )}
       </Button>
     </div>
   );

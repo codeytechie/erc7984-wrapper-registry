@@ -1,6 +1,7 @@
 "use client";
 import { decryptBalance, type ZamaClient } from "@cwr/sdk";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "./spinner";
 import { fmt } from "@/lib/format";
 import { fmtUsd, usdValue } from "@/lib/usd";
 import { useAsyncAction } from "@/hooks/use-async-action";
@@ -51,7 +52,7 @@ export function ConfidentialBalanceCell({
           if (b != null) onRevealed(b);
         }}
       >
-        {isPending ? "…" : failed ? "Retry" : "Reveal"}
+        {isPending ? <Spinner /> : failed ? "Retry" : "Reveal"}
       </Button>
     </span>
   );

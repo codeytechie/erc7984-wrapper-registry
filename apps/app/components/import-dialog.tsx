@@ -10,6 +10,7 @@ import { addImported } from "@/lib/imported";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { addressSchema, parseField } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { Spinner } from "./spinner";
 
 export function ImportDialog({
   open,
@@ -62,7 +63,14 @@ export function ImportDialog({
               onClose();
             }}
           >
-            {isPending ? "Resolving…" : "Import"}
+            {isPending ? (
+              <>
+                <Spinner />
+                Resolving
+              </>
+            ) : (
+              "Import"
+            )}
           </Button>
         </div>
       </DialogContent>

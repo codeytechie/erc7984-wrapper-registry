@@ -4,6 +4,7 @@ import { getPendingUnwrap, resumeUnwrap, unwrap, type PairView, type ZamaClient 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AmountField } from "./amount-field";
+import { Spinner } from "./spinner";
 import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { amountSchema, parseField } from "@/lib/schemas";
@@ -51,7 +52,14 @@ export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pai
               }
             }}
           >
-            {resumeAction.isPending ? "Resuming…" : "Resume pending unwrap"}
+            {resumeAction.isPending ? (
+              <>
+                <Spinner />
+                Resuming
+              </>
+            ) : (
+              "Resume pending unwrap"
+            )}
           </Button>
         </div>
       )}
@@ -69,7 +77,14 @@ export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pai
           refreshPending();
         }}
       >
-        {unwrapAction.isPending ? "Unwrapping…" : `Unwrap ${sym}`}
+        {unwrapAction.isPending ? (
+          <>
+            <Spinner />
+            Unwrapping
+          </>
+        ) : (
+          `Unwrap ${sym}`
+        )}
       </Button>
     </div>
   );
