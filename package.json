@@ -8,6 +8,8 @@
     "dev:landing": "npm run dev -w @cwr/landing",
     "dev:prices": "npm run dev -w @cwr/price-oracle",
     "start:prices": "npm run start -w @cwr/price-oracle",
+    "dev:rpc": "npm run dev -w @cwr/rpc-proxy",
+    "start:rpc": "npm run start -w @cwr/rpc-proxy",
     "build:app": "npm run build:sdk && npm run build -w @cwr/app",
     "build:landing": "npm run build -w @cwr/landing"
   }
