@@ -18,7 +18,7 @@ export const CHAINS: Record<SupportedChainId, ChainConfig> = {
     name: "Ethereum",
     registry: "0xeb5015fF021DB115aCe010f23F55C2591059bBA0",
     relayerUrl: "https://relayer.mainnet.zama.org/v2",
-    lens: undefined,
+    lens: "0xaaE82e1872eaF6101B044Bc5dddd7566e688c06d",
   },
   [SEPOLIA_ID]: {
     id: SEPOLIA_ID,

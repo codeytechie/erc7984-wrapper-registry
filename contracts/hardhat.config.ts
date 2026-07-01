@@ -11,8 +11,8 @@ import { vars } from "hardhat/config";
 
 const MNEMONIC = vars.get("MNEMONIC", "test test test test test test test test test test test junk");
 
-const SEPOLIA_RPC_URL = vars.get("SEPOLIA_RPC_URL", "https://ethereum-sepolia-rpc.publicnode.com");
-const MAINNET_RPC_URL = vars.get("MAINNET_RPC_URL", "https://ethereum-rpc.publicnode.com");
+const SEPOLIA_RPC_URL = vars.get("SEPOLIA_RPC_URL", process.env.SEPOLIA_RPC_URL ?? "https://ethereum-sepolia-rpc.publicnode.com");
+const MAINNET_RPC_URL = vars.get("MAINNET_RPC_URL", process.env.MAINNET_RPC_URL ?? "https://ethereum-rpc.publicnode.com");
 const ETHERSCAN_API_KEY = vars.get("ETHERSCAN_API_KEY", process.env.ETHERSCAN_API_KEY ?? "");
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY ?? "";
