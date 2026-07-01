@@ -20,20 +20,29 @@ export interface CreateZamaClientParams {
   walletClient: WalletClient;
   // optional network override
   rpcUrl?: string;
+  // relayer api key (required by the mainnet relayer)
+  apiKey?: string;
 }
 
 export function createZamaClient(params: CreateZamaClientParams): ZamaClient {
-  const { chainId, account, publicClient, walletClient, rpcUrl } = params;
+  const { chainId, account, publicClient, walletClient, rpcUrl, apiKey } = params;
   if (!isSupportedChain(chainId)) {
     throw new Error(`Unsupported chainId ${chainId}; expected 1 or 11155111.`);
   }
+
+  const auth = apiKey ? ({ __type: "ApiKeyHeader", value: apiKey } as const) : undefined;
+  const chainCfg = <T extends object>(base: T) => ({
+    ...base,
+    ...(rpcUrl ? { network: rpcUrl } : {}),
+    ...(auth ? { auth } : {}),
+  });
 
   // per-chain branch keeps the id literal
   const sdk =
     chainId === MAINNET_ID
       ? new ZamaSDK(
           createConfig({
-            chains: [rpcUrl ? { ...mainnetFhe, network: rpcUrl } : mainnetFhe],
+            chains: [chainCfg(mainnetFhe)],
             relayers: { [MAINNET_ID]: web() },
             publicClient,
             walletClient,
@@ -41,7 +50,7 @@ export function createZamaClient(params: CreateZamaClientParams): ZamaClient {
         )
       : new ZamaSDK(
           createConfig({
-            chains: [rpcUrl ? { ...sepoliaFhe, network: rpcUrl } : sepoliaFhe],
+            chains: [chainCfg(sepoliaFhe)],
             relayers: { [SEPOLIA_ID]: web() },
             publicClient,
             walletClient,

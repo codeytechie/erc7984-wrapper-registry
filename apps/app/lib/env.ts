@@ -3,6 +3,9 @@ export const SEPOLIA_RPC = process.env.NEXT_PUBLIC_SEPOLIA_RPC ?? "https://ether
 export const MAINNET_RPC = process.env.NEXT_PUBLIC_MAINNET_RPC ?? "https://ethereum-rpc.publicnode.com";
 export const PRICE_API = process.env.NEXT_PUBLIC_PRICE_API ?? "http://localhost:8787";
 
+// zama relayer api key (required by the mainnet relayer for decrypt/reveal)
+export const ZAMA_API_KEY = process.env.NEXT_PUBLIC_ZAMA_API_KEY ?? "";
+
 // private rpc proxy base url; when set, used as the priority rpc
 export const RPC_PROXY = process.env.NEXT_PUBLIC_RPC_PROXY ?? "";
 

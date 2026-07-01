@@ -23,7 +23,7 @@ import {
   type SupportedChainId,
   type ZamaClient,
 } from "@cwr/sdk";
-import { MAINNET_RPC, proxyRpc, SEPOLIA_RPC, WC_PROJECT_ID } from "@/lib/env";
+import { MAINNET_RPC, proxyRpc, SEPOLIA_RPC, WC_PROJECT_ID, ZAMA_API_KEY } from "@/lib/env";
 import { shouldRetry } from "@/lib/errors";
 
 const config = getDefaultConfig({
@@ -126,6 +126,7 @@ export function useZamaClient(): ZamaClient | null {
       publicClient,
       walletClient,
       rpcUrl,
+      apiKey: ZAMA_API_KEY || undefined,
     });
   }, [address, publicClient, walletClient, chainId, rpcUrl]);
 }
