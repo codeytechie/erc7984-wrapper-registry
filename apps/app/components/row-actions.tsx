@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Lock, Unlock, Send, Droplets } from "lucide-react";
 import { faucetMint, knownTokenByWrapper, type PairView, type ZamaClient } from "@cwr/sdk";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -11,6 +10,7 @@ import { UnwrapAction } from "./unwrap-action";
 import { TransferAction } from "./transfer-action";
 import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { txToast } from "@/lib/tx";
 
 type Kind = "wrap" | "unwrap" | "transfer";
 
@@ -75,9 +75,9 @@ export function RowActions({
           label="Faucet 1,000"
           disabled={faucet.isPending}
           onClick={async () => {
-            const ok = await faucet.run();
-            if (ok) {
-              toast.success(`Minted 1,000 ${symbol.replace(/^c/, "")}`);
+            const hash = await faucet.run();
+            if (hash) {
+              txToast(client!.chainId, `Minted 1,000 ${symbol.replace(/^c/, "")}`, hash);
               onDone();
             }
           }}

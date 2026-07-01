@@ -20,3 +20,11 @@ export function isSupported(chainId: number | undefined, mode: Mode): boolean {
 export function explorerUrl(mode: Mode): string {
   return mode === "mainnet" ? "https://etherscan.io" : "https://sepolia.etherscan.io";
 }
+
+export function explorerUrlForChain(chainId: number): string {
+  return chainId === mainnet.id ? "https://etherscan.io" : "https://sepolia.etherscan.io";
+}
+
+export function txUrl(chainId: number, hash: string): string {
+  return `${explorerUrlForChain(chainId)}/tx/${hash}`;
+}

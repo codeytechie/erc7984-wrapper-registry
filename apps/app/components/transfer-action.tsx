@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { confidentialTransfer, type PairView, type ZamaClient } from "@cwr/sdk";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AmountField } from "./amount-field";
@@ -10,6 +9,7 @@ import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { addressSchema, amountSchema, parseField } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { txToast } from "@/lib/tx";
 
 export function TransferAction({ client, pair, onDone }: { client: ZamaClient; pair: PairView; onDone?: () => void }) {
   const [to, setTo] = useState("");
@@ -43,7 +43,7 @@ export function TransferAction({ client, pair, onDone }: { client: ZamaClient; p
           if (recipient == null || base == null) return;
           const r = await run(recipient, base);
           if (r) {
-            toast.success("Confidential transfer sent");
+            txToast(client.chainId, "Confidential transfer sent", r.txHash);
             setTo("");
             setAmount("");
             onDone?.();

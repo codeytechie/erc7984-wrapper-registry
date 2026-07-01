@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { approveAndWrap, previewWrap, type PairView, type ZamaClient } from "@cwr/sdk";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AmountField } from "./amount-field";
 import { Spinner } from "./spinner";
@@ -9,6 +8,7 @@ import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { fmt } from "@/lib/format";
 import { amountSchema, parseField } from "@/lib/schemas";
+import { txToast } from "@/lib/tx";
 
 export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair: PairView; onDone?: () => void }) {
   const [amount, setAmount] = useState("");
@@ -18,8 +18,8 @@ export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair:
 
   const { run, isPending } = useAsyncAction(async (amt: bigint) => {
     const preview = await previewWrap(client, pair.wrapper, amt);
-    await approveAndWrap(client, { wrapper: pair.wrapper, underlying: pair.underlying, amount: amt });
-    return preview;
+    const hash = await approveAndWrap(client, { wrapper: pair.wrapper, underlying: pair.underlying, amount: amt });
+    return { preview, hash };
   });
 
   return (
@@ -37,7 +37,7 @@ export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair:
           if (base == null) return;
           const r = await run(base);
           if (r) {
-            toast.success(`Wrapped (refund ${fmt(r.refund, pair.underlyingDecimals)})`);
+            txToast(client.chainId, `Wrapped (refund ${fmt(r.preview.refund, pair.underlyingDecimals)})`, r.hash);
             setAmount("");
             onDone?.();
           }

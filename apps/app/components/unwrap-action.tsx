@@ -8,6 +8,7 @@ import { Spinner } from "./spinner";
 import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { amountSchema, parseField } from "@/lib/schemas";
+import { txToast } from "@/lib/tx";
 
 export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pair: PairView; onDone?: () => void }) {
   const [amount, setAmount] = useState("");
@@ -43,7 +44,7 @@ export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pai
             onClick={async () => {
               const r = await resumeAction.run();
               if (r) {
-                toast.success("Resumed pending unwrap");
+                txToast(client.chainId, "Resumed pending unwrap", r.txHash);
                 setPending(null);
                 onDone?.();
               } else {
@@ -70,7 +71,7 @@ export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pai
           if (base == null) return;
           const r = await unwrapAction.run(base);
           if (r) {
-            toast.success("Unwrapped to ERC-20");
+            txToast(client.chainId, "Unwrapped to ERC-20", r.txHash);
             setAmount("");
             onDone?.();
           }
