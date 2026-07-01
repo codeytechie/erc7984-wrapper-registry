@@ -30,7 +30,8 @@ export function WalletControls() {
     return (
       <Button className="h-9" onClick={() => openConnectModal?.()}>
         <Wallet className="size-4" />
-        Connect wallet
+        <span className="hidden sm:inline">Connect wallet</span>
+        <span className="sm:hidden">Connect</span>
       </Button>
     );
   }
@@ -42,7 +43,8 @@ export function WalletControls() {
       {wrongNetwork ? (
         <Button className="h-9" variant="destructive" disabled={isPending} onClick={() => switchChain({ chainId: target.id })}>
           <TriangleAlert className="size-4" />
-          Switch to {target.name}
+          <span className="hidden sm:inline">Switch to {target.name}</span>
+          <span className="sm:hidden">Switch</span>
         </Button>
       ) : (
         <span className="hidden h-9 items-center gap-1.5 rounded-md border px-3 text-sm text-muted-foreground sm:inline-flex">
@@ -53,9 +55,9 @@ export function WalletControls() {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="h-9 gap-2 pl-2">
+          <Button variant="outline" className="h-9 gap-2 px-2 sm:pr-3">
             <AddressAvatar address={address} size={20} />
-            <span className="font-mono text-sm">{short(address)}</span>
+            <span className="hidden font-mono text-sm sm:inline">{short(address)}</span>
             <ChevronDown className="size-4 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
