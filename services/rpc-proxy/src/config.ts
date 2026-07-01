@@ -18,3 +18,7 @@ export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
   .filter(Boolean);
 
 export const PORT = Number(process.env.PORT ?? 8788);
+
+// zama relayer proxy: keeps the mainnet relayer api key server-side
+export const ZAMA_RELAYER_URL = process.env.ZAMA_RELAYER_URL ?? "https://relayer.mainnet.zama.org/v2";
+export const ZAMA_API_KEY = process.env.ZAMA_API_KEY ?? "";

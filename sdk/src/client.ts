@@ -22,10 +22,12 @@ export interface CreateZamaClientParams {
   rpcUrl?: string;
   // relayer api key (required by the mainnet relayer)
   apiKey?: string;
+  // override the relayer base url (e.g. a server-side proxy that injects the key)
+  relayerUrl?: string;
 }
 
 export function createZamaClient(params: CreateZamaClientParams): ZamaClient {
-  const { chainId, account, publicClient, walletClient, rpcUrl, apiKey } = params;
+  const { chainId, account, publicClient, walletClient, rpcUrl, apiKey, relayerUrl } = params;
   if (!isSupportedChain(chainId)) {
     throw new Error(`Unsupported chainId ${chainId}; expected 1 or 11155111.`);
   }
@@ -34,6 +36,7 @@ export function createZamaClient(params: CreateZamaClientParams): ZamaClient {
   const chainCfg = <T extends object>(base: T) => ({
     ...base,
     ...(rpcUrl ? { network: rpcUrl } : {}),
+    ...(relayerUrl ? { relayerUrl } : {}),
     ...(auth ? { auth } : {}),
   });
 

@@ -23,7 +23,7 @@ import {
   type SupportedChainId,
   type ZamaClient,
 } from "@cwr/sdk";
-import { MAINNET_RPC, proxyRpc, SEPOLIA_RPC, WC_PROJECT_ID, ZAMA_API_KEY } from "@/lib/env";
+import { MAINNET_RPC, proxyRpc, RELAYER_PROXY, SEPOLIA_RPC, WC_PROJECT_ID, ZAMA_API_KEY } from "@/lib/env";
 import { shouldRetry } from "@/lib/errors";
 
 const config = getDefaultConfig({
@@ -118,6 +118,10 @@ export function useZamaClient(): ZamaClient | null {
   const publicClient = usePublicClient({ chainId });
   const { data: walletClient } = useWalletClient();
   const rpcUrl = proxyRpc(chainId) ?? (chainId === mainnet.id ? MAINNET_RPC : SEPOLIA_RPC);
+  // mainnet relayer needs auth: prefer the server-side proxy, else the exposed key
+  const isMainnet = chainId === mainnet.id;
+  const relayerUrl = isMainnet && RELAYER_PROXY ? RELAYER_PROXY : undefined;
+  const apiKey = isMainnet && !RELAYER_PROXY ? ZAMA_API_KEY || undefined : undefined;
   return useMemo(() => {
     if (!address || !publicClient || !walletClient) return null;
     return createZamaClient({
@@ -126,7 +130,8 @@ export function useZamaClient(): ZamaClient | null {
       publicClient,
       walletClient,
       rpcUrl,
-      apiKey: ZAMA_API_KEY || undefined,
+      relayerUrl,
+      apiKey,
     });
-  }, [address, publicClient, walletClient, chainId, rpcUrl]);
+  }, [address, publicClient, walletClient, chainId, rpcUrl, relayerUrl, apiKey]);
 }
