@@ -1,13 +1,29 @@
 "use client";
 import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultConfig, RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
-import { WagmiProvider, useAccount, usePublicClient, useWalletClient } from "wagmi";
+import {
+  getDefaultConfig,
+  RainbowKitProvider,
+  darkTheme,
+} from "@rainbow-me/rainbowkit";
+import {
+  WagmiProvider,
+  useAccount,
+  usePublicClient,
+  useWalletClient,
+} from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
 import { fallback, http } from "viem";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { createZamaClient, rpcUrls, MAINNET_ID, SEPOLIA_ID, type SupportedChainId, type ZamaClient } from "@cwr/sdk";
-import { MAINNET_RPC, SEPOLIA_RPC, WC_PROJECT_ID } from "@/lib/env";
+import {
+  createZamaClient,
+  rpcUrls,
+  MAINNET_ID,
+  SEPOLIA_ID,
+  type SupportedChainId,
+  type ZamaClient,
+} from "@cwr/sdk";
+import { MAINNET_RPC, proxyRpc, SEPOLIA_RPC, WC_PROJECT_ID } from "@/lib/env";
 import { shouldRetry } from "@/lib/errors";
 
 const config = getDefaultConfig({
@@ -15,8 +31,16 @@ const config = getDefaultConfig({
   projectId: WC_PROJECT_ID || "PLACEHOLDER_WC_PROJECT_ID",
   chains: [sepolia, mainnet],
   transports: {
-    [sepolia.id]: fallback(rpcUrls(SEPOLIA_ID, SEPOLIA_RPC).map((u) => http(u))),
-    [mainnet.id]: fallback(rpcUrls(MAINNET_ID, MAINNET_RPC).map((u) => http(u))),
+    [sepolia.id]: fallback(
+      rpcUrls(SEPOLIA_ID, proxyRpc(SEPOLIA_ID), SEPOLIA_RPC).map((u) =>
+        http(u),
+      ),
+    ),
+    [mainnet.id]: fallback(
+      rpcUrls(MAINNET_ID, proxyRpc(MAINNET_ID), MAINNET_RPC).map((u) =>
+        http(u),
+      ),
+    ),
   },
   ssr: true,
 });
@@ -25,7 +49,11 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: shouldRetry, staleTime: 30_000 } },
 });
 
-const zamaTheme = darkTheme({ accentColor: "#FFD208", accentColorForeground: "#000000", borderRadius: "medium" });
+const zamaTheme = darkTheme({
+  accentColor: "#FFD208",
+  accentColorForeground: "#000000",
+  borderRadius: "medium",
+});
 
 export type Mode = "testnet" | "mainnet";
 
@@ -42,7 +70,10 @@ function ModeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<Mode>("testnet");
 
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem(MODE_KEY) : null;
+    const saved =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(MODE_KEY)
+        : null;
     if (saved === "mainnet" || saved === "testnet") setModeState(saved);
   }, []);
 
@@ -52,7 +83,11 @@ function ModeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = useMemo<ModeCtx>(
-    () => ({ mode, chainId: mode === "mainnet" ? mainnet.id : sepolia.id, setMode }),
+    () => ({
+      mode,
+      chainId: mode === "mainnet" ? mainnet.id : sepolia.id,
+      setMode,
+    }),
     [mode],
   );
   return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>;
@@ -82,9 +117,15 @@ export function useZamaClient(): ZamaClient | null {
   const { address } = useAccount();
   const publicClient = usePublicClient({ chainId });
   const { data: walletClient } = useWalletClient();
-  const rpcUrl = chainId === mainnet.id ? MAINNET_RPC : SEPOLIA_RPC;
+  const rpcUrl = proxyRpc(chainId) ?? (chainId === mainnet.id ? MAINNET_RPC : SEPOLIA_RPC);
   return useMemo(() => {
     if (!address || !publicClient || !walletClient) return null;
-    return createZamaClient({ chainId, account: address, publicClient, walletClient, rpcUrl });
+    return createZamaClient({
+      chainId,
+      account: address,
+      publicClient,
+      walletClient,
+      rpcUrl,
+    });
   }, [address, publicClient, walletClient, chainId, rpcUrl]);
 }
