@@ -6,7 +6,7 @@ import {
   fetchPairsDirect,
   faucetMint,
   previewWrap,
-  approveAndWrap,
+  wrap,
   decryptBalance,
   unwrap,
   SEPOLIA_ID,
@@ -54,7 +54,7 @@ async function main(): Promise<void> {
   // 3) Wrap into the REAL official wrapper
   const amount = 100n * 10n ** BigInt(DECIMALS);
   const preview = await previewWrap(client, WRAPPER, amount);
-  await approveAndWrap(client, { wrapper: WRAPPER, underlying: UNDERLYING, amount });
+  await wrap(client, { wrapper: WRAPPER, underlying: UNDERLYING, amount });
   log("Wrap 100 cUSDC", true, `rate=${preview.rate} refund=${preview.refund}`);
 
   // 4) Decrypt balance via EIP-712 through the REAL relayer (the headline)

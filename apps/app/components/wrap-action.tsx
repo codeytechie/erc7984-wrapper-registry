@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { approveAndWrap, previewWrap, type PairView, type ZamaClient } from "@cwr/sdk";
+import { wrap, previewWrap, type PairView, type ZamaClient } from "@cwr/sdk";
 import { Button } from "@/components/ui/button";
 import { AmountField } from "./amount-field";
 import { Spinner } from "./spinner";
@@ -18,8 +18,8 @@ export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair:
 
   const { run, isPending } = useAsyncAction(async (amt: bigint) => {
     const preview = await previewWrap(client, pair.wrapper, amt);
-    const hash = await approveAndWrap(client, { wrapper: pair.wrapper, underlying: pair.underlying, amount: amt });
-    return { preview, hash };
+    const res = await wrap(client, { wrapper: pair.wrapper, underlying: pair.underlying, amount: amt });
+    return { preview, hash: res.txHash };
   });
 
   return (
