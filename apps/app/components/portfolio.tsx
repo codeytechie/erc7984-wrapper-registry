@@ -2,11 +2,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useAccount, usePublicClient } from "wagmi";
+import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
+import { TriangleAlert } from "lucide-react";
 import { abi, decryptBalancesBatch, fetchPairs, resolveImportedToken, type PairView } from "@cwr/sdk";
 import { useMode, useZamaClient } from "@/app/providers";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +27,7 @@ import { normalizeSymbol, symbolOf } from "@/lib/token";
 import { getImported, removeImported } from "@/lib/imported";
 import { fmt } from "@/lib/format";
 import { fmtUsd, usdValue } from "@/lib/usd";
+import { activeChain, explorerUrl, isSupported } from "@/lib/networks";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { usePrices } from "@/hooks/use-prices";
 
@@ -28,8 +37,9 @@ export function Portfolio() {
   const client = useZamaClient();
   const { chainId, mode } = useMode();
   const publicClient = usePublicClient({ chainId });
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId: walletChainId } = useAccount();
   const { openConnectModal } = useConnectModal();
+  const { switchChain, isPending: switching } = useSwitchChain();
   const qc = useQueryClient();
   const { data: prices } = usePrices();
 
@@ -40,9 +50,9 @@ export function Portfolio() {
   });
   const [importOpen, setImportOpen] = useState(false);
 
-  const explorer = mode === "mainnet" ? "https://etherscan.io" : "https://sepolia.etherscan.io";
+  const explorer = explorerUrl(mode);
+  const wrongNetwork = isConnected && !isSupported(walletChainId, mode);
 
-  // reset revealed state when the account changes
   useEffect(() => {
     setConf({ balances: {}, failed: {} });
   }, [address]);
@@ -77,7 +87,6 @@ export function Portfolio() {
 
   const wrappersKey = rows.map((r) => r.wrapper).join(",");
 
-  // public balances in one multicall, keyed by account
   const { data: pub } = useQuery({
     queryKey: ["pub", chainId, address, wrappersKey],
     enabled: !!publicClient && !!address && rows.length > 0,
@@ -108,11 +117,11 @@ export function Portfolio() {
   };
 
   const priceOf = (p: PairView) => prices?.[normalizeSymbol(symbolOf(p))];
-  const totalBase = (p: PairView): bigint => (pub?.[p.wrapper.toLowerCase()] ?? 0n) + (conf.balances[p.wrapper.toLowerCase()] ?? 0n) * p.rate;
+  const totalBase = (p: PairView): bigint =>
+    (pub?.[p.wrapper.toLowerCase()] ?? 0n) + (conf.balances[p.wrapper.toLowerCase()] ?? 0n) * p.rate;
   const isRevealed = (p: PairView) => conf.balances[p.wrapper.toLowerCase()] != null;
   const allRevealed = rows.length > 0 && rows.every(isRevealed) && !!pub;
 
-  // USD aggregate across priced assets
   const overallUsd = allRevealed
     ? rows.reduce((sum, p) => {
         const u = usdValue(totalBase(p), p.underlyingDecimals, priceOf(p));
@@ -123,7 +132,7 @@ export function Portfolio() {
   if (!isConnected) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center gap-4 p-12 text-center">
+        <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
           <p className="text-sm text-muted-foreground">Connect your wallet to view balances and manage tokens.</p>
           <Button onClick={() => openConnectModal?.()}>Connect wallet</Button>
         </CardContent>
@@ -132,11 +141,26 @@ export function Portfolio() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {wrongNetwork && (
+        <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2 text-sm">
+            <TriangleAlert className="size-4 text-destructive" />
+            <span>
+              Wrong network for {mode}. Switch to <span className="font-medium">{activeChain(mode).name}</span> to
+              transact.
+            </span>
+          </div>
+          <Button size="sm" disabled={switching} onClick={() => switchChain({ chainId: activeChain(mode).id })}>
+            Switch to {activeChain(mode).name}
+          </Button>
+        </div>
+      )}
+
       <Card>
-        <CardHeader className="flex items-center justify-between">
+        <CardHeader>
           <CardTitle>Portfolio</CardTitle>
-          <div className="flex gap-2">
+          <CardAction className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
               Import token
             </Button>
@@ -145,32 +169,33 @@ export function Portfolio() {
               disabled={!client || rows.length === 0 || decryptAll.isPending}
               onClick={async () => {
                 const res = await decryptAll.run();
-                if (res) setConf((p) => ({ balances: { ...p.balances, ...res.balances }, failed: { ...p.failed, ...res.failed } }));
+                if (res)
+                  setConf((p) => ({ balances: { ...p.balances, ...res.balances }, failed: { ...p.failed, ...res.failed } }));
               }}
             >
               {decryptAll.isPending ? "Decrypting…" : "Decrypt all"}
             </Button>
-          </div>
+          </CardAction>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-9 w-full" />
+                <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
           ) : (
             <Table>
-              <THead>
-                <TR>
-                  <TH>Token</TH>
-                  <TH>Public</TH>
-                  <TH>Confidential</TH>
-                  <TH>Total</TH>
-                  <TH></TH>
-                </TR>
-              </THead>
-              <TBody>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Token</TableHead>
+                  <TableHead>Public</TableHead>
+                  <TableHead>Confidential</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {rows.map((p) => {
                   const lc = p.wrapper.toLowerCase();
                   const price = priceOf(p);
@@ -180,26 +205,28 @@ export function Portfolio() {
                   const totalUsd = usdValue(tBase, p.underlyingDecimals, price);
                   const revealed = isRevealed(p);
                   return (
-                    <TR key={p.wrapper}>
-                      <TD className="font-medium">
+                    <TableRow key={p.wrapper}>
+                      <TableCell className="font-medium">
                         <span className="inline-flex items-center gap-2">
                           <TokenIcon symbol={symbolOf(p)} address={p.underlying} />
                           {symbolOf(p)}
                           <TokenInfo pair={p} explorer={explorer} />
-                          {importedSet.has(lc) && <Badge variant="muted">imported</Badge>}
+                          {importedSet.has(lc) && <Badge variant="secondary">imported</Badge>}
                         </span>
-                      </TD>
-                      <TD>
+                      </TableCell>
+                      <TableCell>
                         {pub ? (
                           <span className="font-mono">
                             {fmt(pubBal, p.underlyingDecimals)}
-                            {pubUsd != null && <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(pubUsd)}</span>}
+                            {pubUsd != null && (
+                              <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(pubUsd)}</span>
+                            )}
                           </span>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
-                      </TD>
-                      <TD>
+                      </TableCell>
+                      <TableCell>
                         <ConfidentialBalanceCell
                           client={client}
                           wrapper={p.wrapper}
@@ -211,15 +238,15 @@ export function Portfolio() {
                           failed={conf.failed[lc]}
                           onRevealed={(v) => setConf((prev) => ({ balances: { ...prev.balances, [lc]: v }, failed: prev.failed }))}
                         />
-                      </TD>
-                      <TD className="font-mono">
+                      </TableCell>
+                      <TableCell className="font-mono">
                         {mask(revealed, fmt(tBase, p.underlyingDecimals))}
                         {revealed && totalUsd != null && (
                           <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(totalUsd)}</span>
                         )}
-                      </TD>
-                      <TD className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
                           <RowActions client={client} pair={p} showFaucet={mode === "testnet"} onDone={() => refresh(p)} />
                           {importedSet.has(lc) && (
                             <Button
@@ -234,20 +261,20 @@ export function Portfolio() {
                             </Button>
                           )}
                         </div>
-                      </TD>
-                    </TR>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </TBody>
+              </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="flex items-center justify-between p-5">
-          <span className="text-sm text-muted-foreground">Σ holdings (USD estimate)</span>
-          <span className="font-mono">{overallUsd != null ? fmtUsd(overallUsd) : "****"}</span>
+        <CardContent className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Total holdings (USD estimate)</span>
+          <span className="font-mono text-lg">{overallUsd != null ? fmtUsd(overallUsd) : "****"}</span>
         </CardContent>
       </Card>
 

@@ -13,20 +13,20 @@ export function ModeToggle() {
 
   const switchTo = (m: Mode) => {
     if (m === mode) return;
-    disconnect(); // reconnect on target network
+    disconnect(); // reconnect on the target network
     qc.clear(); // drop volatile state
     setMode(m);
   };
 
   return (
-    <div className="inline-flex rounded-md border p-0.5 text-sm">
+    <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm">
       {MODES.map((m) => (
         <button
           key={m}
           onClick={() => switchTo(m)}
           className={cn(
-            "rounded px-3 py-1 capitalize transition-colors",
-            mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+            "rounded-md px-3 py-1 capitalize transition-colors",
+            mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {m}

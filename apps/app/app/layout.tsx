@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
-const telegraf = localFont({
-  src: [
-    { path: "./fonts/Telegraf-Regular.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/Telegraf-Bold.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-telegraf",
-  display: "swap",
-});
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "Confidential Wrapper Registry",
@@ -20,10 +15,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${telegraf.variable} h-full antialiased`}>
-      <body className="min-h-full">
-        <Providers>{children}</Providers>
-        <Toaster richColors theme="dark" />
+    <html lang="en" className={cn("dark", "h-full", "antialiased", "font-sans", geist.variable)}>
+      <body className="min-h-full bg-background text-foreground">
+        <Providers>
+          <TooltipProvider>{children}</TooltipProvider>
+        </Providers>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );
