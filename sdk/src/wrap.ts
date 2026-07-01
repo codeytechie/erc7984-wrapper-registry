@@ -30,8 +30,9 @@ export async function previewWrap(client: ZamaClient, wrapper: `0x${string}`, am
   return { wrapped, refund: amount - wrapped, confidentialAmount, rate };
 }
 
-// SDK shield: validates balance, picks erc1363/approve+wrap, handles fhe gas
+// SDK shield: validates balance, picks erc1363/approve+wrap, handles fhe gas.
+// "max" approval so a sufficient allowance is reused (no repeat approvals).
 export async function wrap(client: ZamaClient, params: WrapParams): Promise<TransactionResult> {
   const token = client.sdk.createWrappedToken(params.wrapper);
-  return token.shield(params.amount, params.to ? { to: params.to } : undefined);
+  return token.shield(params.amount, { approvalStrategy: "max", ...(params.to ? { to: params.to } : {}) });
 }
