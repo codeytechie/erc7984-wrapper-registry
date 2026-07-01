@@ -33,8 +33,9 @@ export function ImportDialog({
           <DialogDescription>Paste an ERC-20 or wrapper address registered on this network.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
-          <Input placeholder="0x…" value={addr} onChange={(e) => setAddr(e.target.value)} />
+          <Input className="h-11" placeholder="0x…" value={addr} onChange={(e) => setAddr(e.target.value)} />
           <Button
+            className="h-11 w-full"
             disabled={isPending || !isAddress(addr) || !publicClient}
             onClick={async () => {
               if (!isAddress(addr)) return;
