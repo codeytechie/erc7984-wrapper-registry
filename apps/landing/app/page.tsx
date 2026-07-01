@@ -13,7 +13,7 @@ const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-between px-6 py-10 sm:px-10 sm:py-16">
-      <header className="rise flex items-center justify-between font-mono text-xs text-mist" style={rise(0)}>
+      <header className="rise flex items-center justify-between text-xs uppercase tracking-[0.14em] text-mist" style={rise(0)}>
         <span>Confidential Wrapper Registry</span>
         <a href={APP_URL} className="transition-colors hover:text-paper">
           Launch app ↗
@@ -31,11 +31,11 @@ export default function Home() {
           </span>
         </p>
 
-        <dl className="rise mt-16 grid max-w-xl grid-cols-2 gap-x-10 gap-y-6 font-mono text-sm" style={rise(2)}>
+        <dl className="rise mt-16 grid max-w-xl grid-cols-2 gap-x-10 gap-y-6 text-sm" style={rise(2)}>
           {META.map(([k, v]) => (
             <div key={k}>
-              <dt className="text-mist">{k}</dt>
-              <dd className="mt-1">{v}</dd>
+              <dt className="text-xs uppercase tracking-[0.14em] text-mist">{k}</dt>
+              <dd className="mt-1.5">{v}</dd>
             </div>
           ))}
         </dl>
@@ -46,7 +46,7 @@ export default function Home() {
         </p>
       </section>
 
-      <footer className="rise flex items-center justify-between font-mono text-xs text-mist" style={rise(4)}>
+      <footer className="rise flex items-center justify-between text-xs uppercase tracking-[0.14em] text-mist" style={rise(4)}>
         <a href={GITHUB_URL} className="transition-colors hover:text-paper">
           GitHub ↗
         </a>

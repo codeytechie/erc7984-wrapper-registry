@@ -3,8 +3,8 @@
 :root {
   color-scheme: dark;
   --void: #000000;
-  --paper: #ededed;
-  --mist: #6f6f76;
+  --paper: #ffffff;
+  --mist: rgba(255, 255, 255, 0.5);
   --zama: #ffd208;
 }
 
@@ -14,7 +14,6 @@
   --color-mist: var(--mist);
   --color-zama: var(--zama);
   --font-sans: var(--font-telegraf), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 body {
