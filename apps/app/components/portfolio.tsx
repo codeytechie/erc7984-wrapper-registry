@@ -141,12 +141,14 @@ export function Portfolio() {
   const isRevealed = (p: PairView) => conf.balances[p.wrapper.toLowerCase()] != null;
   const allRevealed = rows.length > 0 && rows.every(isRevealed) && !!pub;
 
-  const overallUsd = allRevealed
-    ? rows.reduce((sum, p) => {
-        const u = usdValue(totalBase(p), p.underlyingDecimals, priceOf(p));
-        return u != null ? sum + u : sum;
-      }, 0)
-    : null;
+  // null when nothing revealed OR the price oracle is unreachable (avoids a misleading $0)
+  const overallUsd =
+    allRevealed && prices
+      ? rows.reduce((sum, p) => {
+          const u = usdValue(totalBase(p), p.underlyingDecimals, priceOf(p));
+          return u != null ? sum + u : sum;
+        }, 0)
+      : null;
 
   if (!isConnected) {
     return (
