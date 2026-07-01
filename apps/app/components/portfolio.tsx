@@ -6,7 +6,7 @@ import { useAccount, usePublicClient, useSwitchChain } from "wagmi";
 import { TriangleAlert } from "lucide-react";
 import { abi, decryptBalancesBatch, fetchPairs, resolveImportedToken, type PairView } from "@cwr/sdk";
 import { useMode, useZamaClient } from "@/app/providers";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -157,26 +157,34 @@ export function Portfolio() {
         </div>
       )}
 
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">Total holdings</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tracking-tight">
+            {overallUsd != null ? fmtUsd(overallUsd) : "****"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {rows.length} {rows.length === 1 ? "token" : "tokens"} · {activeChain(mode).name}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            Import token
+          </Button>
+          <Button
+            disabled={!client || rows.length === 0 || decryptAll.isPending}
+            onClick={async () => {
+              const res = await decryptAll.run();
+              if (res)
+                setConf((p) => ({ balances: { ...p.balances, ...res.balances }, failed: { ...p.failed, ...res.failed } }));
+            }}
+          >
+            {decryptAll.isPending ? "Decrypting…" : "Decrypt all"}
+          </Button>
+        </div>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Portfolio</CardTitle>
-          <CardAction className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-              Import token
-            </Button>
-            <Button
-              size="sm"
-              disabled={!client || rows.length === 0 || decryptAll.isPending}
-              onClick={async () => {
-                const res = await decryptAll.run();
-                if (res)
-                  setConf((p) => ({ balances: { ...p.balances, ...res.balances }, failed: { ...p.failed, ...res.failed } }));
-              }}
-            >
-              {decryptAll.isPending ? "Decrypting…" : "Decrypt all"}
-            </Button>
-          </CardAction>
-        </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
@@ -268,13 +276,6 @@ export function Portfolio() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Total holdings (USD estimate)</span>
-          <span className="font-mono text-lg">{overallUsd != null ? fmtUsd(overallUsd) : "****"}</span>
         </CardContent>
       </Card>
 

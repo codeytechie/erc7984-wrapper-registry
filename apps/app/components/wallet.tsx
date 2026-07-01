@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useMode } from "@/app/providers";
 import { activeChain, explorerUrl, isSupported } from "@/lib/networks";
+import { ChainIcon } from "./chain-icon";
+import { AddressAvatar } from "./address-avatar";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
@@ -26,7 +28,7 @@ export function WalletControls() {
 
   if (!isConnected || !address) {
     return (
-      <Button size="sm" onClick={() => openConnectModal?.()}>
+      <Button className="h-9" onClick={() => openConnectModal?.()}>
         <Wallet className="size-4" />
         Connect wallet
       </Button>
@@ -38,25 +40,31 @@ export function WalletControls() {
   return (
     <div className="flex items-center gap-2">
       {wrongNetwork ? (
-        <Button size="sm" variant="destructive" disabled={isPending} onClick={() => switchChain({ chainId: target.id })}>
+        <Button className="h-9" variant="destructive" disabled={isPending} onClick={() => switchChain({ chainId: target.id })}>
           <TriangleAlert className="size-4" />
           Switch to {target.name}
         </Button>
       ) : (
-        <span className="hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs text-muted-foreground sm:inline-flex">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
+        <span className="hidden h-9 items-center gap-1.5 rounded-md border px-3 text-sm text-muted-foreground sm:inline-flex">
+          <ChainIcon size={16} />
           {target.name}
         </span>
       )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="outline">
-            {short(address)}
+          <Button variant="outline" className="h-9 gap-2 pl-2">
+            <AddressAvatar address={address} size={20} />
+            <span className="font-mono text-sm">{short(address)}</span>
             <ChevronDown className="size-4 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-52">
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <AddressAvatar address={address} size={26} />
+            <span className="font-mono text-sm">{short(address)}</span>
+          </div>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {
               navigator.clipboard.writeText(address);

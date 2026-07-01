@@ -19,13 +19,13 @@ export function ModeToggle() {
   };
 
   return (
-    <div className="inline-flex rounded-lg border bg-card p-0.5 text-sm">
+    <div className="inline-flex h-9 items-center rounded-lg border bg-card p-1 text-sm">
       {MODES.map((m) => (
         <button
           key={m}
           onClick={() => switchTo(m)}
           className={cn(
-            "rounded-md px-3 py-1 capitalize transition-colors",
+            "flex h-7 items-center rounded-md px-3 capitalize transition-colors",
             mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
