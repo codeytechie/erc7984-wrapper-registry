@@ -203,7 +203,7 @@ export function Portfolio() {
         </div>
       </div>
 
-      <Card className="mt-12">
+      <Card className="mt-8">
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
