@@ -12,11 +12,11 @@ function Row({ label, value, href }: { label: string; value: string; href?: stri
     <div className="flex items-center justify-between gap-3 text-xs">
       <span className="text-muted-foreground">{label}</span>
       {href ? (
-        <a href={href} target="_blank" rel="noreferrer" className="font-mono hover:underline">
+        <a href={href} target="_blank" rel="noreferrer" className="hover:underline">
           {value}
         </a>
       ) : (
-        <span className="font-mono">{value}</span>
+        <span>{value}</span>
       )}
     </div>
   );

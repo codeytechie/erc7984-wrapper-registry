@@ -57,14 +57,14 @@ export function WalletControls() {
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="h-9 gap-2 px-2 sm:pr-3">
             <AddressAvatar address={address} size={20} />
-            <span className="hidden font-mono text-sm sm:inline">{short(address)}</span>
+            <span className="hidden text-sm sm:inline">{short(address)}</span>
             <ChevronDown className="size-4 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <div className="flex items-center gap-2 px-2 py-1.5">
             <AddressAvatar address={address} size={26} />
-            <span className="font-mono text-sm">{short(address)}</span>
+            <span className="text-sm">{short(address)}</span>
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem

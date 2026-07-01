@@ -33,6 +33,20 @@ import { usePrices } from "@/hooks/use-prices";
 
 const mask = (revealed: boolean, formatted: string) => (revealed ? formatted : "****");
 
+// renders the fractional part dimmer than the whole part
+function HeroUsd({ value }: { value: number | null }) {
+  if (value == null) return <span>****</span>;
+  const s = fmtUsd(value);
+  const dot = s.indexOf(".");
+  if (dot === -1 || /[kmbt]$/i.test(s)) return <span>{s}</span>;
+  return (
+    <span>
+      {s.slice(0, dot)}
+      <span className="text-muted-foreground">{s.slice(dot)}</span>
+    </span>
+  );
+}
+
 export function Portfolio() {
   const client = useZamaClient();
   const { chainId, mode } = useMode();
@@ -82,7 +96,12 @@ export function Portfolio() {
 
   const rows = useMemo(() => {
     const seen = new Set((registryPairs ?? []).map((p) => p.wrapper.toLowerCase()));
-    return [...(registryPairs ?? []), ...imported.filter((p) => !seen.has(p.wrapper.toLowerCase()))];
+    const combined = [...(registryPairs ?? []), ...imported.filter((p) => !seen.has(p.wrapper.toLowerCase()))];
+    // pin ZAMA to the top
+    return combined.sort((a, b) => {
+      const rank = (p: PairView) => (normalizeSymbol(symbolOf(p)) === "ZAMA" ? 0 : 1);
+      return rank(a) - rank(b);
+    });
   }, [registryPairs, imported]);
 
   const wrappersKey = rows.map((r) => r.wrapper).join(",");
@@ -160,11 +179,11 @@ export function Portfolio() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm text-muted-foreground">Total holdings</p>
-          <p className="mt-1 font-mono text-3xl font-semibold tracking-tight">
-            {overallUsd != null ? fmtUsd(overallUsd) : "****"}
+          <p className="mt-1 text-4xl font-semibold tracking-tight">
+            <HeroUsd value={overallUsd} />
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {rows.length} {rows.length === 1 ? "token" : "tokens"} · {activeChain(mode).name}
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {rows.length} {rows.length === 1 ? "token" : "tokens"} on {activeChain(mode).name}
           </p>
         </div>
         <div className="flex gap-2">
@@ -184,7 +203,7 @@ export function Portfolio() {
         </div>
       </div>
 
-      <Card>
+      <Card className="mt-12">
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
@@ -193,7 +212,7 @@ export function Portfolio() {
               ))}
             </div>
           ) : (
-            <Table>
+            <Table className="text-[15px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Token</TableHead>
@@ -222,19 +241,17 @@ export function Portfolio() {
                           {importedSet.has(lc) && <Badge variant="secondary">imported</Badge>}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap tabular-nums">
                         {pub ? (
-                          <span className="font-mono">
-                            {fmt(pubBal, p.underlyingDecimals)}
-                            {pubUsd != null && (
-                              <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(pubUsd)}</span>
-                            )}
-                          </span>
+                          <div className="flex flex-col leading-tight">
+                            <span className="">{fmt(pubBal, p.underlyingDecimals)}</span>
+                            {pubUsd != null && <span className="text-xs text-muted-foreground">{fmtUsd(pubUsd)}</span>}
+                          </div>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap tabular-nums">
                         <ConfidentialBalanceCell
                           client={client}
                           wrapper={p.wrapper}
@@ -247,11 +264,13 @@ export function Portfolio() {
                           onRevealed={(v) => setConf((prev) => ({ balances: { ...prev.balances, [lc]: v }, failed: prev.failed }))}
                         />
                       </TableCell>
-                      <TableCell className="font-mono">
-                        {mask(revealed, fmt(tBase, p.underlyingDecimals))}
-                        {revealed && totalUsd != null && (
-                          <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(totalUsd)}</span>
-                        )}
+                      <TableCell className="whitespace-nowrap tabular-nums">
+                        <div className="flex flex-col leading-tight">
+                          <span className="">{mask(revealed, fmt(tBase, p.underlyingDecimals))}</span>
+                          {revealed && totalUsd != null && (
+                            <span className="text-xs text-muted-foreground">{fmtUsd(totalUsd)}</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">

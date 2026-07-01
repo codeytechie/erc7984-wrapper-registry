@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Confidential Wrapper Registry",
@@ -15,12 +15,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn("dark", "h-full", "antialiased", "font-sans", geist.variable)}>
+    <html lang="en" suppressHydrationWarning className={`h-full antialiased ${geist.variable} font-sans`}>
       <body className="min-h-full bg-background text-foreground">
-        <Providers>
-          <TooltipProvider>{children}</TooltipProvider>
-        </Providers>
-        <Toaster richColors position="top-right" />
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <Providers>
+            <TooltipProvider>{children}</TooltipProvider>
+          </Providers>
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

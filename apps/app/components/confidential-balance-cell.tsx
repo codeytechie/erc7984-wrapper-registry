@@ -31,17 +31,17 @@ export function ConfidentialBalanceCell({
   if (value != null) {
     const dollars = usdValue(value * rate, underlyingDecimals, price);
     return (
-      <span className="font-mono">
-        {fmt(value, decimals)}
-        {dollars != null && <span className="ml-1 text-xs text-muted-foreground">{fmtUsd(dollars)}</span>}
-      </span>
+      <div className="flex flex-col leading-tight">
+        <span>{fmt(value, decimals)}</span>
+        {dollars != null && <span className="text-xs text-muted-foreground">{fmtUsd(dollars)}</span>}
+      </div>
     );
   }
-  if (!client) return <span className="font-mono text-muted-foreground">****</span>;
+  if (!client) return <span className="text-muted-foreground">****</span>;
 
   return (
     <span className="flex items-center gap-2">
-      <span className="font-mono text-muted-foreground">****</span>
+      <span className="text-muted-foreground">****</span>
       <Button
         size="sm"
         variant="outline"

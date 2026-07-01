@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TokenIcon } from "./token-icon";
 import { WrapAction } from "./wrap-action";
 import { UnwrapAction } from "./unwrap-action";
 import { TransferAction } from "./transfer-action";
@@ -18,7 +17,7 @@ type Kind = "wrap" | "unwrap" | "transfer";
 const COPY: Record<Kind, { title: string; desc: string }> = {
   wrap: { title: "Wrap", desc: "Deposit the public token and mint its confidential wrapper." },
   unwrap: { title: "Unwrap", desc: "Burn the confidential wrapper and withdraw the public token." },
-  transfer: { title: "Confidential transfer", desc: "Send an encrypted amount — the chain never sees how much." },
+  transfer: { title: "Confidential transfer", desc: "Send an encrypted amount. The chain never sees how much." },
 };
 
 function IconBtn({
@@ -65,7 +64,7 @@ export function RowActions({
     setKind(null);
   };
 
-  if (!client) return <span className="text-xs text-muted-foreground">—</span>;
+  if (!client) return <span className="text-xs text-muted-foreground">-</span>;
 
   const symbol = symbolOf(pair);
 
@@ -101,15 +100,10 @@ export function RowActions({
           {kind && (
             <>
               <DialogHeader>
-                <div className="flex items-center gap-3">
-                  <TokenIcon symbol={symbol} address={pair.underlying} size={36} />
-                  <div className="text-left">
-                    <DialogTitle>
-                      {COPY[kind].title} · {symbol}
-                    </DialogTitle>
-                    <DialogDescription>{COPY[kind].desc}</DialogDescription>
-                  </div>
-                </div>
+                <DialogTitle>
+                  {COPY[kind].title} {symbol}
+                </DialogTitle>
+                <DialogDescription>{COPY[kind].desc}</DialogDescription>
               </DialogHeader>
               {kind === "wrap" && <WrapAction client={client} pair={pair} onDone={done} />}
               {kind === "unwrap" && <UnwrapAction client={client} pair={pair} onDone={done} />}

@@ -1,4 +1,5 @@
 import { formatUnits } from "viem";
+import { compactNum } from "./format";
 
 export function usdValue(base: bigint, decimals: number, price?: number): number | null {
   if (price == null) return null;
@@ -6,5 +7,6 @@ export function usdValue(base: bigint, decimals: number, price?: number): number
 }
 
 export function fmtUsd(v: number): string {
+  if (Math.abs(v) >= 10000) return `$${compactNum(v)}`;
   return v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 }

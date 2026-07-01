@@ -3,52 +3,40 @@ import { useState } from "react";
 import { resumeUnwrap, unwrap, type PairView, type ZamaClient } from "@cwr/sdk";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AmountField } from "./amount-field";
+import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { parseAmount } from "@/lib/format";
 
-export function UnwrapAction({
-  client,
-  pair,
-  onDone,
-}: {
-  client: ZamaClient;
-  pair: PairView;
-  onDone?: () => void;
-}) {
+export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pair: PairView; onDone?: () => void }) {
   const [amount, setAmount] = useState("");
+  const sym = symbolOf(pair);
   const base = parseAmount(amount, pair.wrapperDecimals);
   const unwrapAction = useAsyncAction((amt: bigint) => unwrap(client, { wrapper: pair.wrapper, amount: amt }));
   const resumeAction = useAsyncAction(() => resumeUnwrap(client, pair.wrapper));
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
-        <Input
-          placeholder="amount"
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-        <Button
-          disabled={unwrapAction.isPending || base == null || base === 0n}
-          onClick={async () => {
-            if (base == null) return;
-            const r = await unwrapAction.run(base);
-            if (r) {
-              toast.success("Unwrapped to ERC-20");
-              setAmount("");
-              onDone?.();
-            }
-          }}
-        >
-          {unwrapAction.isPending ? "Unwrapping…" : "Unwrap"}
-        </Button>
-      </div>
+    <div className="flex flex-col gap-3">
+      <AmountField symbol={sym} address={pair.underlying} value={amount} onChange={setAmount} />
+      <Button
+        className="h-11 w-full"
+        disabled={unwrapAction.isPending || base == null || base === 0n}
+        onClick={async () => {
+          if (base == null) return;
+          const r = await unwrapAction.run(base);
+          if (r) {
+            toast.success("Unwrapped to ERC-20");
+            setAmount("");
+            onDone?.();
+          }
+        }}
+      >
+        {unwrapAction.isPending ? "Unwrapping…" : `Unwrap ${sym}`}
+      </Button>
       <Button
         variant="ghost"
         size="sm"
-        className="self-start"
+        className="w-full"
         disabled={resumeAction.isPending}
         onClick={async () => {
           const r = await resumeAction.run();
@@ -60,7 +48,7 @@ export function UnwrapAction({
           }
         }}
       >
-        {resumeAction.isPending ? "Resuming…" : "Resume pending"}
+        {resumeAction.isPending ? "Resuming…" : "Resume pending unwrap"}
       </Button>
     </div>
   );
