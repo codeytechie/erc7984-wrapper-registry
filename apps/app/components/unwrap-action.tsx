@@ -19,6 +19,22 @@ export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pai
     <div className="flex flex-col gap-3">
       <AmountField symbol={sym} address={pair.underlying} value={amount} onChange={setAmount} />
       <Button
+        variant="outline"
+        className="h-11 w-full"
+        disabled={resumeAction.isPending}
+        onClick={async () => {
+          const r = await resumeAction.run();
+          if (r) {
+            toast.success("Resumed pending unwrap");
+            onDone?.();
+          } else {
+            toast.message("No pending unwrap");
+          }
+        }}
+      >
+        {resumeAction.isPending ? "Resuming…" : "Resume pending unwrap"}
+      </Button>
+      <Button
         className="h-11 w-full"
         disabled={unwrapAction.isPending || base == null || base === 0n}
         onClick={async () => {
@@ -32,23 +48,6 @@ export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pai
         }}
       >
         {unwrapAction.isPending ? "Unwrapping…" : `Unwrap ${sym}`}
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full"
-        disabled={resumeAction.isPending}
-        onClick={async () => {
-          const r = await resumeAction.run();
-          if (r) {
-            toast.success("Resumed pending unwrap");
-            onDone?.();
-          } else {
-            toast.message("No pending unwrap");
-          }
-        }}
-      >
-        {resumeAction.isPending ? "Resuming…" : "Resume pending unwrap"}
       </Button>
     </div>
   );
