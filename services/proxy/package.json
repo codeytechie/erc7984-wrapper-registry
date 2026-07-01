@@ -1,9 +1,9 @@
 {
-  "name": "@cwr/rpc-proxy",
+  "name": "@cwr/proxy",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Minimal JSON-RPC proxy: keeps private upstream URLs server-side, origin-allowlisted (zero runtime deps).",
+  "description": "Minimal server-side proxy for RPC and the Zama relayer: keeps private keys off the client, origin-allowlisted (zero runtime deps).",
   "license": "MIT",
   "scripts": {
     "dev": "tsx watch src/index.ts",

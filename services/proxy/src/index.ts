@@ -115,7 +115,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`rpc-proxy listening on :${PORT}`);
+  console.log(`proxy listening on :${PORT}`);
   console.log(allowAll ? "origins: ALL (set ALLOWED_ORIGINS to lock down)" : `origins: ${ALLOWED_ORIGINS.join(", ")}`);
   console.log(`relayer proxy: ${ZAMA_API_KEY ? `on -> ${ZAMA_RELAYER_URL}` : "off (set ZAMA_API_KEY)"}`);
 });
