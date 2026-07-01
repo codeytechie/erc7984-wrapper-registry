@@ -1,4 +1,5 @@
 export * from "./chains";
+export * from "./rpc";
 export * from "./tokens";
 export * from "./types";
 export * from "./client";

@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { isAddress } from "viem";
 import { usePublicClient } from "wagmi";
 import { resolveImportedToken, type PairView, type SupportedChainId } from "@cwr/sdk";
 import { toast } from "sonner";
@@ -9,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addImported } from "@/lib/imported";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { addressSchema, parseField } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
 
 export function ImportDialog({
   open,
@@ -23,6 +24,7 @@ export function ImportDialog({
 }) {
   const [addr, setAddr] = useState("");
   const publicClient = usePublicClient({ chainId });
+  const { value: parsed, error } = parseField(addressSchema, addr);
   const { run, isPending } = useAsyncAction((a: `0x${string}`) => resolveImportedToken(publicClient!, chainId, a));
 
   return (
@@ -33,13 +35,22 @@ export function ImportDialog({
           <DialogDescription>Paste an ERC-20 or wrapper address registered on this network.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
-          <Input className="h-11" placeholder="0x…" value={addr} onChange={(e) => setAddr(e.target.value)} />
+          <div className="flex flex-col gap-1.5">
+            <Input
+              className={cn("h-11", error && "border-destructive focus-visible:ring-destructive/40")}
+              placeholder="0x…"
+              value={addr}
+              aria-invalid={!!error}
+              onChange={(e) => setAddr(e.target.value)}
+            />
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </div>
           <Button
             className="h-11 w-full"
-            disabled={isPending || !isAddress(addr) || !publicClient}
+            disabled={isPending || parsed == null || !publicClient}
             onClick={async () => {
-              if (!isAddress(addr)) return;
-              const pair = await run(addr);
+              if (parsed == null) return;
+              const pair = await run(parsed);
               if (!pair) {
                 toast.error("Not a valid registry token on this network.");
                 return;

@@ -3,10 +3,10 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultConfig, RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { WagmiProvider, useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
-import { http } from "viem";
+import { fallback, http } from "viem";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { createZamaClient, type SupportedChainId, type ZamaClient } from "@cwr/sdk";
+import { createZamaClient, rpcUrls, MAINNET_ID, SEPOLIA_ID, type SupportedChainId, type ZamaClient } from "@cwr/sdk";
 import { MAINNET_RPC, SEPOLIA_RPC, WC_PROJECT_ID } from "@/lib/env";
 import { shouldRetry } from "@/lib/errors";
 
@@ -14,7 +14,10 @@ const config = getDefaultConfig({
   appName: "Confidential Wrapper Registry",
   projectId: WC_PROJECT_ID || "PLACEHOLDER_WC_PROJECT_ID",
   chains: [sepolia, mainnet],
-  transports: { [sepolia.id]: http(SEPOLIA_RPC), [mainnet.id]: http(MAINNET_RPC) },
+  transports: {
+    [sepolia.id]: fallback(rpcUrls(SEPOLIA_ID, SEPOLIA_RPC).map((u) => http(u))),
+    [mainnet.id]: fallback(rpcUrls(MAINNET_ID, MAINNET_RPC).map((u) => http(u))),
+  },
   ssr: true,
 });
 

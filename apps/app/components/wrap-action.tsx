@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { AmountField } from "./amount-field";
 import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { fmt, parseAmount } from "@/lib/format";
+import { fmt } from "@/lib/format";
+import { amountSchema, parseField } from "@/lib/schemas";
 
 export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair: PairView; onDone?: () => void }) {
   const [amount, setAmount] = useState("");
   const sym = symbolOf(pair);
-  const base = parseAmount(amount, pair.underlyingDecimals);
+  const { value: base, error } = parseField(amountSchema(pair.underlyingDecimals), amount);
   const estimate = base != null && pair.rate > 0n ? base / pair.rate : null;
 
   const { run, isPending } = useAsyncAction(async (amt: bigint) => {
@@ -22,7 +23,7 @@ export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair:
 
   return (
     <div className="flex flex-col gap-3">
-      <AmountField symbol={sym} address={pair.underlying} value={amount} onChange={setAmount} />
+      <AmountField symbol={sym} address={pair.underlying} value={amount} onChange={setAmount} error={error} />
       {estimate != null && (
         <p className="text-xs text-muted-foreground">
           You receive ≈ {estimate.toString()} {sym}
@@ -30,7 +31,7 @@ export function WrapAction({ client, pair, onDone }: { client: ZamaClient; pair:
       )}
       <Button
         className="h-11 w-full"
-        disabled={isPending || base == null || base === 0n}
+        disabled={isPending || base == null}
         onClick={async () => {
           if (base == null) return;
           const r = await run(base);

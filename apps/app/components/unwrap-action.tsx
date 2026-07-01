@@ -6,18 +6,18 @@ import { Button } from "@/components/ui/button";
 import { AmountField } from "./amount-field";
 import { symbolOf } from "@/lib/token";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { parseAmount } from "@/lib/format";
+import { amountSchema, parseField } from "@/lib/schemas";
 
 export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pair: PairView; onDone?: () => void }) {
   const [amount, setAmount] = useState("");
   const sym = symbolOf(pair);
-  const base = parseAmount(amount, pair.wrapperDecimals);
+  const { value: base, error } = parseField(amountSchema(pair.wrapperDecimals), amount);
   const unwrapAction = useAsyncAction((amt: bigint) => unwrap(client, { wrapper: pair.wrapper, amount: amt }));
   const resumeAction = useAsyncAction(() => resumeUnwrap(client, pair.wrapper));
 
   return (
     <div className="flex flex-col gap-3">
-      <AmountField symbol={sym} address={pair.underlying} value={amount} onChange={setAmount} />
+      <AmountField symbol={sym} address={pair.underlying} value={amount} onChange={setAmount} error={error} />
       <Button
         variant="outline"
         className="h-11 w-full"
@@ -36,7 +36,7 @@ export function UnwrapAction({ client, pair, onDone }: { client: ZamaClient; pai
       </Button>
       <Button
         className="h-11 w-full"
-        disabled={unwrapAction.isPending || base == null || base === 0n}
+        disabled={unwrapAction.isPending || base == null}
         onClick={async () => {
           if (base == null) return;
           const r = await unwrapAction.run(base);
